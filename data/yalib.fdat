@@ -1,0 +1,183 @@
+yalib_symbols:
+;( buffers )
+;{
+  yalib_symbols.buffers:
+  dq                                    ( yalib.buffers.clone                   - _start_ )
+  dq                                    ( yalib.buffers.create                  - _start_ )
+  onDebug
+  {
+    dq                                  ( yalib.buffers.debug                   - _start_ )
+  }
+  dq                                    ( yalib.buffers.delete                  - _start_ )
+  dq                                    ( yalib.buffers.echo                    - _start_ )
+  dq                                    ( yalib.buffers.echo0                   - _start_ )
+  dq                                    ( yalib.buffers.extend                  - _start_ )
+  dq                                    ( yalib.buffers.get                     - _start_ )
+  dq                                    ( yalib.buffers.is                      - _start_ )
+  dq                                    ( yalib.buffers.len                     - _start_ )
+  dq                                    ( yalib.buffers.length                  - _start_ )
+  dq                                    ( yalib.buffers.new                     - _start_ )
+  dq                                    ( yalib.buffers.putB                    - _start_ )
+  dq                                    ( yalib.buffers.putByte                 - _start_ )
+  dq                                    ( yalib.buffers.putD                    - _start_ )
+  dq                                    ( yalib.buffers.putDWord                - _start_ )
+  dq                                    ( yalib.buffers.putQ                    - _start_ )
+  dq                                    ( yalib.buffers.putQWord                - _start_ )
+  dq                                    ( yalib.buffers.putW                    - _start_ )
+  dq                                    ( yalib.buffers.putWord                 - _start_ )
+  dq                                    ( yalib.buffers.rev                     - _start_ )
+  dq                                    ( yalib.buffers.revive                  - _start_ )
+  dq                                    ( yalib.buffers.store                   - _start_ )
+  dq                                    ( yalib.buffers.utf8                    - _start_ )
+  dq                                    ( yalib.buffers.wastepicker             - _start_ )
+  yalib_count.buffers                   =                                       (( $ - yalib_symbols.buffers ) / 8 )
+;}
+;( echo )
+;{
+  yalib_symbols.echo:
+  dq                                    ( yalib.echo.error                      - _start_ )
+  dq                                    ( yalib.echo.hexBuffer                  - _start_ )
+  dq                                    ( yalib.echo.hexRegister                - _start_ )
+  dq                                    ( yalib.echo.hexValue                   - _start_ )
+  dq                                    ( yalib.echo.print                      - _start_ )
+  dq                                    ( yalib.echo.state                      - _start_ )
+  yalib_count.echo                      =                                       (( $ - yalib_symbols.echo ) / 8 )
+;}
+;( environment )
+;{
+  yalib_symbols.environment:
+  dq                                    ( yalib.environment.get                 - _start_ )
+  dq                                    ( yalib.environment.init                - _start_ )
+  yalib_count.environment               =                                       (( $ - yalib_symbols.environment ) / 8 )
+;}
+;( files )
+;{
+  yalib_symbols.files:
+  dq                                    ( yalib.files.close                     - _start_ )
+  dq                                    ( yalib.files.debug                     - _start_ )
+  dq                                    ( yalib.files.get                       - _start_ )
+  dq                                    ( yalib.files.getB                      - _start_ )
+  dq                                    ( yalib.files.getByte                   - _start_ )
+  dq                                    ( yalib.files.getC                      - _start_ )
+  dq                                    ( yalib.files.getChar                   - _start_ )
+  dq                                    ( yalib.files.getD                      - _start_ )
+  dq                                    ( yalib.files.getDWord                  - _start_ )
+  dq                                    ( yalib.files.getL                      - _start_ )
+  dq                                    ( yalib.files.getLength                 - _start_ )
+  dq                                    ( yalib.files.getO                      - _start_ )
+  dq                                    ( yalib.files.getObject                 - _start_ )
+  dq                                    ( yalib.files.getQ                      - _start_ )
+  dq                                    ( yalib.files.getQWord                  - _start_ )
+  dq                                    ( yalib.files.getS                      - _start_ )
+  dq                                    ( yalib.files.getString                 - _start_ )
+  dq                                    ( yalib.files.getTo                     - _start_ )
+  dq                                    ( yalib.files.getUTF8                   - _start_ )
+  dq                                    ( yalib.files.getW                      - _start_ )
+  dq                                    ( yalib.files.getWord                   - _start_ )
+  dq                                    ( yalib.files.open                      - _start_ )
+  dq                                    ( yalib.files.seek                      - _start_ )
+  dq                                    ( yalib.files.seekBack                  - _start_ )
+  dq                                    ( yalib.files.seekBase                  - _start_ )
+  yalib_count.files                     =                                       (( $ - yalib_symbols.files ) / 8 )
+;}
+;( threads )
+;{
+  yalib_symbols.threads:
+  dq                                    ( yalib.threads.call                    - _start_ )
+  yalib_count.threads                   =                                       (( $ - yalib_symbols.threads ) / 8 )
+;}
+;( time )
+;{
+  yalib_symbols.time:
+  dq                                    ( yalib.time.nanosleep                  - _start_ )
+  yalib_count.time                      =                                       (( $ - yalib_symbols.time ) / 8 )
+;}
+yalib_pointers:
+;( buffers )
+;{
+  yalib_pointers.buffers:
+  dq                                    ( buffers.clone                         - _start_ )
+  dq                                    ( buffers.create                        - _start_ )
+  onDebug
+  {
+    dq                                  ( buffers.debug                         - _start_ )
+  }
+  dq                                    ( buffers.delete                        - _start_ )
+  dq                                    ( buffers.echo                          - _start_ )
+  dq                                    ( buffers.echo0                         - _start_ )
+  dq                                    ( buffers.extend                        - _start_ )
+  dq                                    ( buffers.get                           - _start_ )
+  dq                                    ( buffers.is                            - _start_ )
+  dq                                    ( buffers.len                           - _start_ )
+  dq                                    ( buffers.length                        - _start_ )
+  dq                                    ( buffers.new                           - _start_ )
+  dq                                    ( buffers.putB                          - _start_ )
+  dq                                    ( buffers.putByte                       - _start_ )
+  dq                                    ( buffers.putD                          - _start_ )
+  dq                                    ( buffers.putDWord                      - _start_ )
+  dq                                    ( buffers.putQ                          - _start_ )
+  dq                                    ( buffers.putQWord                      - _start_ )
+  dq                                    ( buffers.putW                          - _start_ )
+  dq                                    ( buffers.putWord                       - _start_ )
+  dq                                    ( buffers.rev                           - _start_ )
+  dq                                    ( buffers.revive                        - _start_ )
+  dq                                    ( buffers.store                         - _start_ )
+  dq                                    ( buffers.utf8                          - _start_ )
+  dq                                    ( buffers.wastepicker                   - _start_ )
+;}
+;( echo )
+;{
+  yalib_pointers.echo:
+  dq                                    ( echo.error                            - _start_ )
+  dq                                    ( echo.hexBuffer                        - _start_ )
+  dq                                    ( echo.hexRegister                      - _start_ )
+  dq                                    ( echo.hexValue                         - _start_ )
+  dq                                    ( echo.print                            - _start_ )
+  dq                                    ( echo.state                            - _start_ )
+;}
+;( enviroment )
+;{
+  yalib_pointers.environment:
+  dq                                    ( environment.get                       - _start_ )
+  dq                                    ( environment.init                      - _start_ )
+;}
+;( files )
+;{
+  yalib_pointers.files:
+  dq                                    ( files.close                           - _start_ )
+  dq                                    ( files.debug                           - _start_ )
+  dq                                    ( files.get                             - _start_ )
+  dq                                    ( files.getB                            - _start_ )
+  dq                                    ( files.getByte                         - _start_ )
+  dq                                    ( files.getC                            - _start_ )
+  dq                                    ( files.getChar                         - _start_ )
+  dq                                    ( files.getD                            - _start_ )
+  dq                                    ( files.getDWord                        - _start_ )
+  dq                                    ( files.getL                            - _start_ )
+  dq                                    ( files.getLength                       - _start_ )
+  dq                                    ( files.getObject                       - _start_ )
+  dq                                    ( files.getObject                       - _start_ )
+  dq                                    ( files.getQ                            - _start_ )
+  dq                                    ( files.getQWord                        - _start_ )
+  dq                                    ( files.getString                       - _start_ )
+  dq                                    ( files.getString                       - _start_ )
+  dq                                    ( files.getTo                           - _start_ )
+  dq                                    ( files.getUTF8                         - _start_ )
+  dq                                    ( files.getW                            - _start_ )
+  dq                                    ( files.getWord                         - _start_ )
+  dq                                    ( files.open                            - _start_ )
+  dq                                    ( files.seek                            - _start_ )
+  dq                                    ( files.seekBack                        - _start_ )
+  dq                                    ( files.seekBase                        - _start_ )
+;}
+;( threads )
+;{
+  yalib_pointers.threads:
+  dq                                    ( threads.call                          - _start_ )
+;}
+;( time )
+;{
+  yalib_pointers.time:
+  dq                                    ( time.nanosleep                        - _start_ )
+;}
+yalib_count                             =                                       (( $ - yalib_pointers ) / 8 )

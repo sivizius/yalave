@@ -1,0 +1,28 @@
+stub.main:
+  syscall
+  call                        r15
+  onDebug
+  {
+    mov                       qword [ stubValue ],          rax
+    mov                       sys2arg,                      ( stubReturn.size + stubValue.size )
+    lea                       sys1arg,                      [ stubReturn ]
+    mov                       sys0arg,                      STDOUT
+    mov                       rax,                          sys_write
+    syscall
+    mov                       sys2arg,                      stubFinal.size
+    lea                       sys1arg,                      [ stubFinal ]
+    mov                       sys0arg,                      STDOUT
+    mov                       rax,                          sys_write
+    syscall
+  }
+  xor                         sys0arg,                      sys0arg
+  mov                         rax,                          sys_exit_group
+  syscall
+  onDebug
+  {
+    stubFinal                 db                            '[yalave] == Final ==', 10
+    stubReturn                db                            '[yalave] '
+    stubValue                 db                            '01234567', 10
+  }
+stub.main.size                =                             ( $ - stub.main )
+

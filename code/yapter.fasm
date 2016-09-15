@@ -1,0 +1,1568 @@
+;( yapter-table )
+;{
+;:  .table —+    .column —+
+;:          |     .....   |     .....         .....
+;:          |    _______  |    _______       _______
+;:          +——>| ..... |—+——>| .next |————>| ..... |——>.....
+;:              |       |     | .stop |——+  |       |
+;:              |       |     | .line |  |  |       |
+;:              |       | +——>| ..... |  |  |       |
+;:              |       | |   |       |  |  |       |
+;:              |       | |   |       |  |  |       |
+;:              |_______| |   |_______|  |  |_______|
+;:                .....   |     .....  <—+    .....
+;:            __yentry__ —+
+;:
+;}
+;( mod-structure )
+;{
+;: -0x02                                .length                                 23
+;:  0x00                                .module                                 -> symbols                              first string  of module to compare with
+;:  0x08                                .assign                                 -> pointers                             first pointer of module
+;:  0x10                                .myself                                 -> symbols                              first string  of file   to look for in module
+;:  0x
+;}
+yapter:
+  ;.type                                 =                                       ( 0x00 )
+;  .self                                 =                                       ( 0x08 )
+  .next                                 =                                       ( 0x00 )
+  .stop                                 =                                       ( 0x08 )
+  .yType                                =                                       ( 0x00 )                                ;type       of yentry
+  .yMagic                               =                                       ( 0x06 )                                ;magic-word of yentry
+  .ySelf                                =                                       ( 0x08 )                                ;*content   of yentry
+  .ySize                                =                                       ( 0x02 )                                ;size       of content              in file
+  .yResv                                =                                       ( 0x04 )                                ;size       of content              in memory
+  .yInit                                =                                       ( 0x06 )                                ;cuid       of initial code-yentry  of executable
+  .ySymbols                             =                                       ( 0x02 )                                ;cuid       of symbols-yentry       of module
+  .yPointers                            =                                       ( 0x04 )                                ;cuif       of pointers-yentry      of module
+  .yCounter                             =                                       ( 0x06 )                                ;number     of symbols              of module-yentry
+  .yAmount                              =                                       ( 0x02 )                                ;number     of pointers/symbols     of interface-yentry
+  .init:
+    ;( I/O )
+    ;{
+    ;:  sys1arg/rsi                     table-frame-size                        unknown
+    ;:  sys0arg/rdi                     *filename                               unknown
+    ;:  CF                              ignored                                 set on error, otherwise cleared
+    ;}
+  ;{
+    ;( align table-frame-size )
+      add                               sys1arg,                                ( page_size - 1 )
+      and                               sys1arg,                                ( 0 - page_size )
+      mov                               word  [ yapter.length ],                sys1arg_w
+    ;( open input-file failed -> failInputFile )
+      null                              sys5arg
+      null                              sys4arg
+      null                              sys3arg
+      mov                               sys2arg,                                file_modeR
+      mov                               sys1arg,                                AT_FDCWD
+      call                              files.open
+      jc                                .failInputFile
+      mov                               word  [ __file__  + files.ystate ],     sbaYapter_mBuildExecutable
+    ;( init yalib! )
+      lea                               rdi,                                    [ yalib_symbols       ]
+      lea                               rsi,                                    [ yalib_pointers - 8  ]
+      lea                               rdx,                                    [ _start_             ]
+      mov                               rcx,                                    ( yalib_count )
+      @@:
+        add                             qword [ rdi ],                          rdx
+        add                             rsi,                                    8
+        add                             rdi,                                    8
+        add                             qword [ rsi ],                          rdx
+        dec                             rcx
+        jz                              @f
+        jmp                             @b
+      @@:
+    ;( get fd of libraries-directory )
+      mov                               sys1arg,                                ( file_modeR + O_DIRECTORY )
+      lea                               sys0arg,                                [ .pathLibraries ]
+      sys_call                          sys_open
+      mov                               qword [ .libraries ],                   sys0ret
+      onError_put
+      onError_fail                      .failInternal
+  ;}
+  .open:
+    ;( I/O )
+    ;{
+    ;:  __file__                        *file                                   unknown
+    ;:  CF                              ignored                                 set on error, otherwise cleared
+    ;}
+  ;{
+    ;( malloc some pages as yapter-table )
+     ;< consider to use buffers? >
+      null                              sys5arg
+      mov                               sys4arg,                                ( 0 - 1 )
+      mov                               sys3arg,                                ( MMAP_fPrivate or MMAP_fAnonymous )
+      mov                               sys2arg,                                MMAP_pRW
+      movzx                             sys1arg,                                word  [ .length ]
+      null                              sys0arg
+      sys_call                          sys_mmap
+      mov                               __yentry__,                             sys0ret
+    ;( if failed -> failInternal )
+      onError_put
+      onError_fail                      .failInternal
+    ;( initialize heap- and page-structure )
+      mov                               qword [ __file__ + files.ytable ],      __yentry__
+      mov                               qword [ __file__ + files.ycolumn ],     __yentry__
+      mov                               qword [ __file__ + files.yentry ],      __yentry__
+      movzx                             rax,                                    word  [ .length ]
+      mov                               word  [ __file__ + files.ysize ],       ax
+      add                               rax,                                    __yentry__
+      mov                               qword [ __yentry__ + .stop ],           rax
+    ;( debug file )
+      call                              files.debug
+    ;( input-file.match( »#!sba64\n« ) failed -> failSignature )
+      call                              files.getQ
+      cmp                               rax,                                    qword [ .signature ]
+      jne                               .failSignature
+    ;( input-file.skip( »\0« ))
+      echo_put                          .signature
+      @@:
+        call                            files.getB
+        flags                           al
+        jz                              @f
+        echo_put                        files.getBuffer,                        1
+        jmp                             @b
+      @@:
+    ;( set base of file to offset of yapter-table )
+      mov                               rax,                                    qword [ __file__ + files.offset ]
+      mov                               qword [ __file__ + files.base ],        rax
+    ;( build internal yapter-structure )
+    ;{
+      mov                               __yentry__,                             qword [ __file__ + files.yentry ]
+      onDebug
+      {
+        echo_put                        .msgBuild
+      }
+      .build:
+      ;{
+        ;( read line failed -> .failFile )
+          mov                           sys2arg,                                ( 16 )
+          lea                           sys1arg,                                [ .line ]
+          call                          files.getTo
+          jc                            .failFile
+        ;( end of file reached -> .failFileEOF )
+          cmp                           rax,                                    ( 16 )
+          jne                           .failFileEOF
+        ;( if type >= sbaChapter_tMaximum -> failInternal )
+          movzx                         __tmp2__,                               word  [ .line + .yType ]
+          cmp                           __tmp2__,                               sbaChapter_tMaximum
+          ja                            .failYapterUnknown
+        ;( else )
+        ;{
+          inc                           word  [ __file__ + files.ycuid ]
+          onDebug
+          {
+            __save__                    __file__,                               __page__
+            ;( echo yapter-type )
+              ;> echo '<' + typeName(yapter.type) + '> %0x' + cuid + ' 0x' + word[0] + ' 0x' + word[1] + ' 0x' + word[2] + ' 0x' + word[3] + ' 0x' + self
+              echo_put                  .typeName
+              mov                       sys1arg,                                qword [ .tVectors + __tmp2__ * 8 ]
+              flags                     sys1arg
+              jz                        .failInternal
+              movzx                     sys2arg,                                word  [ sys1arg - 2 ]
+              echo_put
+              echo_put                  .typeCUID
+              echo_hexValue             ( __file__ + files.ycuid ),             ( 2 )
+              echo_put                  .typeWord
+              echo_hexValue             ( .line + .yType ),                     ( 2 )
+              echo_put                  .typeWord
+              echo_hexValue             ( .line + .ySize ),                     ( 2 )
+              echo_put                  .typeWord
+              echo_hexValue             ( .line + .yResv ),                     ( 2 )
+              echo_put                  .typeWord
+              echo_hexValue             ( .line + .yMagic ),                    ( 2 )
+              echo_put                  .typeWord
+              echo_hexValue             ( .line + .ySelf ),                     ( 8 )
+              echo_n
+            __load__                    __file__,                               __page__
+          }
+          ;( execute yapter-related build-function )
+            mov                         __tmp2__,                               qword [ .bVectors + __tmp2__ * 8 ]
+            flags                       __tmp2__
+            jz                          .failInternal
+            jmp                         __tmp2__
+          ;{
+            ;( local resv = align size )
+            .bAlignSize:
+            ;{
+              mov                       ax,                                     word  [ .line + .ySize ]
+              .bAlignSize.fast:
+              add                       ax,                                     ( page_size - 1 )
+              and                       ax,                                     (( 0 - page_size ) and 0xffff )
+              mov                       word  [ .line + .yResv ],               ax
+              ret
+            ;}
+            ;( pointers = align base )
+            .bAlignBase:
+            ;{
+              mov                       rax,                                    qword [ __file__ + files.ypages ]
+              add                       rax,                                    ( page_size - 1 )
+              and                       rax,                                    (( 0 - page_size ))
+              mov                       qword [ __file__ + files.ypages ],      rax
+              ret
+            ;}
+            ;( insert yentry in table )
+            .bInsert:
+            ;{
+              add                       __yentry__,                             ( 16 )
+              mov                       rbx,                                    qword [ __file__ + files.ycolumn ]
+              cmp                       __yentry__,                             qword [ rbx + .stop ]
+              jae                       .bInsert.expand
+              .bInsert.return:
+              ;{
+                mov                     rax,                                    qword [ .line + 0x00 ]
+                mov                     qword [ __yentry__ + 0 ],               rax
+                mov                     rax,                                    qword [ .line + 0x08 ]
+                mov                     qword [ __yentry__ + 8 ],               rax
+              ;}
+              jmp                       .build
+              .bInsert.expand:
+              ;{
+                null                    sys5arg
+                mov                     sys4arg,                                ( 0 - 1 )
+                mov                     sys3arg,                                ( MMAP_fPrivate or MMAP_fAnonymous )
+                mov                     sys2arg,                                MMAP_pRW
+                movzx                   sys1arg,                                word  [ .length ]
+                add                     word  [ __file__ + files.ysize ],       sys1arg_w
+                null                    sys0arg
+                sys_call                sys_mmap
+                onError_put
+                onError_fail            .failInternal
+                lea                     __yentry__,                             [       sys0ret     + 16            ]
+                mov                     qword [ rbx       + .next         ],    sys0ret
+                mov                     qword [ __file__  + files.ycolumn ],    sys0ret
+                movzx                   rcx,                                    word  [               .length       ]
+                add                     rcx,                                    rax
+                mov                     qword [ rbx       + .stop           ],  rcx
+                jmp                     .bInsert.return
+              ;}
+            ;}
+            .bx86_16:
+            ;{
+              ;( if magic != ( 'x86', 0x16 ) -> failMagic )
+                cmp                     dword [ .line     + .yResv          ],  ( 'x86' + 0x16000000 )
+                jne                     .failMagic
+              ;( else )
+              ;{
+                call                    .bAlignBase
+                call                    .bAlignSize
+                add                     qword [ __file__  + files.ypages    ],  rax
+                jmp                     .bInsert
+              ;}
+            ;}
+            .bx86_32:
+            ;{
+              ;( if magic != ( 'x86', 0x32 ) -> failMagic )
+                cmp                     dword [ .line     + .yResv          ],  ( 'x86' + 0x32000000 )
+                jne                     .failMagic
+              ;( else )
+              ;{
+                call                    .bAlignBase
+                call                    .bAlignSize
+                add                     qword [ __file__  + files.ypages    ],  rax
+                jmp                     .bInsert
+              ;}
+            ;}
+            .bx86_64:
+            ;{
+              ;( if magic != ( 'amd', 0x64 ) -> failMagic )
+                cmp                     dword [ .line     + .yResv          ],  ( 'amd' + 0x64000000 )
+                jne                     .failMagic
+              ;( else )
+              ;{
+                call                    .bAlignBase
+                call                    .bAlignSize
+                add                     qword [ __file__  + files.ypages    ],  rax
+                jmp                     .bInsert
+              ;}
+            ;}
+            .bCode:
+            ;{
+              ;( if magic != ( 'code' ) -> failMagic )
+                cmp                     dword [ .line     + .yResv          ],  'code'
+                jne                     .failMagic
+              ;( else )
+              ;{
+                call                    .bAlignBase
+                call                    .bAlignSize
+                add                     qword [ __file__  + files.ypages    ],  rax
+                jmp                     .bInsert
+              ;}
+            ;}
+            .bModule:
+            ;{
+              ;( if magic != 'load' -> failMagic )
+                cmp                     dword [ .line     + .yResv          ],  'load'
+                jne                     .failMagic
+              ;( else )
+              ;{
+                ;( if *(cuid_symbols).type != <symbols> -> failModuleSymbols )
+                  movzx                 rax,                                    word  [ .line       + .ySymbols     ]
+                  call                  .lCUID
+                  cmp                   word  [ rax       + .yType          ],  sbaYapter_tSymbols
+                  jne                   .failModuleSymbols
+                ;( else )
+                ;{
+                  ;( line.count = ctr; resv = 8 * ctr; file.ypages += resv; line.resv = resv )
+                    mov                 rbx,                                    rax
+                    movzx               rdx,                                    word  [ rax         + .yAmount      ]
+                    mov                 word  [ .line     + .yCounter       ],  dx
+                    shl                 rdx,                                    ( 3 )
+                    add                 qword [ __file__  + files.ypages    ],  rdx
+                    mov                 word  [ .line     + .yResv          ],  dx
+                  ;( get filename of module -> line.self )
+                    mov                 rsi,                                    qword [ .line       + .ySelf        ]
+                    call                files.seekBase
+                    getL@__file__
+                    getS@__file__
+                    mov                 qword [ .line     + .ySelf          ],  rdi
+                    call                files.seekBack
+                  ;( select module.name )
+                    mov                 rsi,                                    qword [ .line       + .ySelf        ]
+                    mov                 __tmp2__,                               __file__
+                    null                rdi
+                    mov                 eax,                                    dword [ rsi ]
+                  ;{
+                    ;( case 'buffers' )
+                    ;{
+                      cmp               eax,                                    dword [ yalib_mods.buffers      - 2 ]   ;size:'bu'
+                      je                .bModule.buffers
+                    ;}
+                    ;( case 'echo' )
+                    ;{
+                      cmp               eax,                                    dword [ yalib_mods.echo         - 2 ]   ;size:'ec'
+                      je                .bModule.echo
+                    ;}
+                    ;( case 'enviroment' )
+                    ;{
+                      cmp               eax,                                    dword [ yalib_mods.environment  - 2 ]   ;size:'en'
+                      je                .bModule.environment
+                    ;}
+                    ;( case 'files' )
+                    ;{
+                      cmp               eax,                                    dword [ yalib_mods.files        - 2 ]   ;size:'fi'
+                      je                .bModule.files
+                    ;}
+                    ;( case 'threads' )
+                    ;{
+                      cmp               eax,                                    dword [ yalib_mods.threads      - 2 ]   ;size:'th'
+                      je                .bModule.threads
+                    ;}
+                    ;( case 'time' )
+                    ;{
+                      cmp               eax,                                    dword [ yalib_mods.time         - 2 ]   ;size:'ti'
+                      je                .bModule.time
+                    ;}
+                    ;( default )
+                      .bModule.default:
+                    ;{
+                      mov               rdi,                                    rsi
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.ysymbols  ],   rbx
+                      mov               __file__,                               __tmp2__
+                      jmp               .bInsert
+                    ;}
+                    .bModule.buffers:
+                    ;{
+                      mov               rax,                                    qword [ rsi + 1 ]
+                      cmp               rax,                                    qword [ yalib_mods.buffers - 1 ]        ;0x00:'buffers'
+                      jne               .bModule.default
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.name ],        ( yalib_mods.buffers0 - 2 )
+                      mov               qword [ __file__ + files.ysymbols ],    ( yalib_symbols.buffers )
+                      mov               qword [ __file__ + files.ypointers ],   ( yalib_pointers.buffers )
+                      mov               word  [ __file__ + files.ycount ],      ( yalib_count.buffers )
+                      mov               qword [ __file__ + files.ypages  ],     rbx
+                      mov               __file__,                               __tmp2__
+                      ;echo_put          .msgYalib
+                      ;echo_put          .msgYalibBuffers
+                      ;echo_n
+                      jmp               .bInsert
+                    ;}
+                    .bModule.echo:
+                    ;{
+                      mov               ax,                                     word  [ rsi + 4 ]
+                      cmp               ax,                                     word  [ yalib_mods.echo + 2 ]           ;'ho'
+                      jne               .bModule.default
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.name ],        ( yalib_mods.echo0 - 2 )
+                      mov               qword [ __file__ + files.ysymbols ],    ( yalib_symbols.echo )
+                      mov               qword [ __file__ + files.ypointers ],   ( yalib_pointers.echo )
+                      mov               word  [ __file__ + files.ycount ],      ( yalib_count.echo )
+                      mov               qword [ __file__ + files.ypages  ],     rbx
+                      mov               __file__,                               __tmp2__
+                      ;echo_put          .msgYalib
+                      ;echo_put          .msgYalibEcho
+                      ;echo_n
+                      jmp               .bInsert
+                    ;}
+                    .bModule.environment:
+                    ;{
+                      mov               rax,                                    qword [ rsi +  4 ]
+                      cmp               rax,                                    qword [ yalib_mods.environment +  2 ]   ;'vironmen'
+                      mov               al,                                     byte  [ rsi + 12 ]
+                      jne               .bModule.default
+                      cmp               al,                                     byte  [ yalib_mods.environment + 10 ]   ;'t'
+                      jne               .bModule.default
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.name ],        ( yalib_mods.environment0 - 2 )
+                      mov               qword [ __file__ + files.ysymbols ],    ( yalib_symbols.environment )
+                      mov               qword [ __file__ + files.ypointers ],   ( yalib_pointers.environment )
+                      mov               word  [ __file__ + files.ycount ],      ( yalib_count.environment )
+                      mov               qword [ __file__ + files.ypages  ],     rbx
+                      mov               __file__,                               __tmp2__
+                      ;echo_put          .msgYalib
+                      ;echo_put          .msgYalibEnvironment
+                      ;echo_n
+                      jmp               .bInsert
+                    ;}
+                    .bModule.files:
+                    ;{
+                      mov               eax,                                    dword [ rsi + 3 ]
+                      cmp               eax,                                    dword [ yalib_mods.files + 1 ]          ;'iles'
+                      jne               .bModule.default
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.name ],        ( yalib_mods.files0 - 2 )
+                      mov               qword [ __file__ + files.ysymbols ],    ( yalib_symbols.files )
+                      mov               qword [ __file__ + files.ypointers ],   ( yalib_pointers.files )
+                      mov               word  [ __file__ + files.ycount ],      ( yalib_count.files )
+                      mov               qword [ __file__ + files.ypages  ],     rbx
+                      mov               __file__,                               __tmp2__
+                      ;echo_put          .msgYalib
+                      ;echo_put          .msgYalibFiles
+                      ;echo_n
+                      jmp               .bInsert
+                    ;}
+                    .bModule.threads:
+                    ;{
+                      mov               rax,                                    qword [ rsi + 1 ]
+                      cmp               rax,                                    qword [ yalib_mods.threads - 1 ]        ;0x00:'threads'
+                      jne               .bModule.default
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.name ],        ( yalib_mods.threads0 - 2 )
+                      mov               qword [ __file__ + files.ysymbols ],    ( yalib_symbols.threads )
+                      mov               qword [ __file__ + files.ypointers ],   ( yalib_pointers.threads )
+                      mov               word  [ __file__ + files.ycount ],      ( yalib_count.threads )
+                      mov               qword [ __file__ + files.ypages  ],     rbx
+                      mov               __file__,                               __tmp2__
+                      ;echo_put          .msgYalib
+                      ;echo_put          .msgYalibThreads
+                      ;echo_n
+                      jmp               .bInsert
+                    ;}
+                    .bModule.time:
+                    ;{
+                      mov               ax,                                     word  [ rsi + 4 ]
+                      cmp               ax,                                     word  [ yalib_mods.time + 2 ]           ;'me'
+                      jne               .bModule.default
+                      call              .bModule.open
+                      mov               qword [ __file__ + files.name ],        ( yalib_mods.time0 - 2 )
+                      mov               qword [ __file__ + files.ysymbols ],    ( yalib_symbols.time )
+                      mov               qword [ __file__ + files.ypointers ],   ( yalib_pointers.time )
+                      mov               word  [ __file__ + files.ycount ],      ( yalib_count.time )
+                      mov               qword [ __file__ + files.ypages  ],     rbx
+                      mov               __file__,                               __tmp2__
+                      ;echo_put          .msgYalib
+                      ;echo_put          .msgYalibTime
+                      ;echo_n
+                      jmp               .bInsert
+                    ;}
+                  ;}
+                ;}
+              ;}
+            ;}
+            .bModule.open:
+            ;{
+              mov                       sys5arg,                                __file__
+              null                      sys4arg
+              null                      sys3arg
+              mov                       sys2arg,                                file_modeR
+              mov                       sys1arg,                                qword [ .libraries                  ]
+              call                      files.open
+              jc                        .failInputFile
+              mov                       qword [ .line     + .ySelf          ],  __file__
+              ret
+            ;}
+            .bPointers:
+            ;{
+              ;( if magic != '*ptr' -> failMagic )-
+                cmp                     dword [ .line + .yResv ],               '*ptr'
+                jne                     .failMagic
+              ;( else -> .bSymPtr )
+              ;{
+                jmp                     .bSymPtrBuf
+              ;}
+            ;}
+            .bSymbols:
+            ;{
+              ;( if magic != 'symb' -> failMagic )
+                cmp                     dword [ .line + .yResv ],               'symb'
+                jne                     .failMagic
+              ;( else )
+                .bSymPtrBuf:
+              ;{
+                movzx                   rax,                                    word  [ .line + .yAmount ]
+                shl                     rax,                                    ( 3 )
+                add                     qword [ __file__  + files.ypages    ],  rax
+                jmp                     .bInsert
+              ;}
+            ;}
+            .bRandom:
+            ;{
+              ;( if magic != 'rand' -> failMagic )
+                cmp                     dword [ .line + .yResv ],               'rand'
+                jne                     .failMagic
+              call                      .bAlignSize
+              add                       qword [ __file__ + files.ypages ],      rax
+              jmp                       .bInsert
+            ;}
+            .bBuffers:
+            ;{
+              ;( if magic != 'symb' -> failMagic )
+                cmp                     dword [ .line + .yResv ],               '*buf'
+                jne                     .failMagic
+              ;( else -> bSymPtr )
+                jmp                     .bSymPtrBuf
+            ;}
+            .bConst:
+            ;{
+              ;( if magic != 'cb' -> failMagic )
+                cmp                     word  [ .line + .yMagic ],              'cb'
+                jne                     .failMagic
+              call                      .bAlignSize
+              add                       qword [ __file__ + files.ypages ],      rax
+              jmp                       .bInsert
+            ;}
+            .bStack:
+            ;{
+              ;( if magic != 'stck' -> failMagic )
+                cmp                     dword [ .line + .yResv ],               'stck'
+                jne                     .failMagic
+              jmp                       .build
+            ;}
+            .bData:
+            ;{
+              ;( if magic != 'db' -> failMagic )
+                cmp                     word  [ .line + .yMagic ],             'db'
+                jne                     .failMagic
+              call                      .bAlignBase
+              movzx                     rbx,                                    word  [ .line + .ySize ]                ; = size
+              movzx                     rax,                                    word  [ .line + .yResv ]                ; = resv
+              cmp                       rax,                                    rbx                                     ; resv < size?
+              cmovb                     rax,                                    rbx                                     ; true: resv = size
+              call                      .bAlignSize.fast
+              add                       qword [ __file__ + files.ypages ],      rax
+              jmp                       .bInsert
+            ;}
+            .bNote:
+            ;{
+              ;( if magic != 'note' -> failMagic )
+                cmp                     dword [ .line + .yResv ],               'note'
+                jne                     .failMagic
+              mov                       rsi,                                    qword [ .line + .ySelf ]
+              call                      files.seekBase
+              call                      files.getWord
+              movzx                     rcx,                                    ax
+              call                      files.getString
+              mov                       qword [ .line + .ySelf ],               rdi
+              call                      files.seekBack
+              jmp                       .bInsert
+            ;}
+            .bFinal.expand:
+            ;{
+              null                      sys5arg
+              mov                       sys4arg,                                ( 0 - 1 )
+              mov                       sys3arg,                                ( MMAP_fPrivate or MMAP_fAnonymous )
+              mov                       sys2arg,                                MMAP_pRW
+              movzx                     sys1arg,                                word  [ .length ]
+              add                       word  [ __file__ + files.ysize ],       sys1arg_w
+              null                      sys0arg
+              sys_call                  sys_mmap
+              onError_put
+              onError_fail              .failInternal
+              lea                       __yentry__,                             [ sys0ret + 16 ]
+              mov                       qword [ rbx + .next ],                  sys0ret
+              mov                       qword [ __file__ + files.ycolumn ],     sys0ret
+              movzx                     rcx,                                    word  [ .length ]
+              add                       rcx,                                    rax
+              mov                       qword [ rbx + .stop ],                  rcx
+              jmp                       .bFinal.load
+            ;}
+            .bFinal.executable:
+            ;{
+              ;( if     ( cuid.symbols or cuid.pointers ) -> failExecutable )
+                cmp                     dword [ .line + 2 ],                    null ;0x00000000
+                jne                     .failExecutable
+              ;( if not ( cuid.init )                     -> failExecutable )
+                cmp                     word  [ .line + .yInit ],               null ;0x0000
+                je                      .failExecutable
+              ;( else -> bFinal.fine )
+                jmp                     .bFinal.fine
+            ;}
+            .bFinal.setup:
+            ;{
+              ;( if     ( cuid.symbols or cuid.pointers ) -> failSetup )
+                cmp                     dword [ .line + 2 ],                    null ;0x00000000
+                jne                     .failSetup
+              ;( if not ( cuid.init )                     -> failSetup )
+                cmp                     word  [ .line + .yInit ],               null ;0x0000
+                je                      .failSetup
+              ;( else -> bFinal.fine )
+                jmp                     .bFinal.fine
+            ;}
+            .bFinal.module:
+            ;{
+              ;( if cuid.symbols  = NULL -> failModule )
+                cmp                     word  [ .line + .ySymbols ],            null ;0x0000
+                je                      .failModule
+              ;( if cuid.pointers = NULL -> failModule )
+                cmp                     word  [ .line + .yPointers ],           null ;0x0000
+                je                      .failModule
+              ;( if     ( cuid.init )    -> failModule )
+                cmp                     word  [ .line + .yInit ],               null ;0x0000
+                jne                     .failModule
+              ;( else -> bFinal.fine )
+                jmp                     .bFinal.fine
+            ;}
+            .bFinal:
+            ;{
+              ;( if magic != 'enough' -> failMagic )
+                cmp                     dword [ .line + .ySelf + 0 ],           'ycon'
+                jne                     .failMagic
+                cmp                     dword [ .line + .ySelf + 4 ],           'tent'
+                jne                     .failMagic
+              ;( select mode )
+                mov                     ax,                                     word  [ __file__ + files.ystate ]
+              ;{
+                ;( case <build executable> )
+                  cmp                   ax,                                     sbaYapter_mBuildExecutable
+                  je                    .bFinal.executable
+                ;( case <build module> )
+                  cmp                   ax,                                     sbaYapter_mBuildModule
+                  je                    .bFinal.module
+                ;( case <build setup> )
+                  cmp                   ax,                                     sbaYapter_mBuildSetup
+                  je                    .bFinal.setup
+                ;( default ( just in case ))
+                  jmp                   .failInternal
+              ;}
+              .bFinal.fine:
+              ;( allocate pages )
+                add                     __yentry__,                             ( 16 )
+                mov                     rbx,                                    qword [ __file__ + files.ycolumn ]
+                mov                     rdi,                                    qword [ __file__ + files.ypages ]
+                cmp                     __yentry__,                             qword [ rbx + .stop ]
+                jae                     .bFinal.expand
+                .bFinal.load:
+                ;{
+                  mov                   rax,                                    qword [ .line + 0x00 ]
+                  add                   rdi,                                    ( page_size - 1 )
+                  mov                   qword [ __yentry__ + 0 ],               rax
+                  and                   rdi,                                    ( 0 - page_size )
+                  mov                   rax,                                    qword [ .line + 0x08 ]
+                  mov                   qword  [ __file__ + files.ypages ],     rdi
+                  mov                   qword [ __yentry__ + 8 ],               rax
+                ;}
+                null                    sys5arg
+                mov                     sys4arg,                                ( 0 - 1 )
+                mov                     sys3arg,                                ( MMAP_fPrivate or MMAP_fAnonymous )
+                mov                     sys2arg,                                MMAP_pRW
+                mov                     sys1arg,                                qword [ __file__ + files.ypages ]
+                null                    sys0arg
+                sys_call                sys_mmap
+                mov                     rbx,                                    sys0ret
+                onError_put
+                onError_fail            .failInternal
+                mov                     qword [ .current ],                     rbx
+                mov                     qword [ __file__ + files.ycontent ],    sys0ret
+                onDebug
+                {
+                  echo_put              .myTab1
+                  echo_put              .msgHere
+                  echo_hexRegister      rbx
+                  echo_n
+                  echo_put              .myTab1
+                  echo_put              .msgResv
+                  echo_hexValue         ( __file__ + files.ypages ),            ( 8 )
+                  echo_n
+                  add                   rbx,                                    qword [ __file__ + files.ypages ]
+                  echo_put              .myTab1
+                  echo_put              .msgStop
+                  echo_hexRegister      rbx
+                  echo_n
+                }
+              ;( entry in yapter-structure )
+              ;( load yapters )
+              ;{
+                onDebug
+                {
+                  echo_put              .msgLoad
+                }
+                mov                     __yentry__,                             qword [ __file__ + files.ytable ]
+                mov                     qword [ __file__ + files.ycolumn ],     __yentry__
+                inc                     word  [ __file__ + files.ystate ]
+                .load:
+                ;hlt
+                ;{
+                  ;( get next entry )
+                    add                 __yentry__,                             ( 16 )
+                    mov                 rbx,                                    qword [ __file__ + files.ycolumn ]
+                    cmp                 __yentry__,                             qword [ rbx + .stop ]
+                    jae                 .lNextColumn
+                    .lReturn:
+                  ;( debug yapter )
+                    onDebug
+                    {
+                      __save__          __file__,                               __page__
+                        ;> echo '[yapter] type: 0x' + type
+                        echo_put        .msgType
+                        echo_hexValue   __yentry__,                             ( 2 )
+                        ;> echo '[yapter] self:   ' + payload
+                        echo_put        .msgPayload
+                        echo_hexBuffer  __yentry__,                             ( 16 )
+                        ;> echo \n
+                        echo_n
+                      __load__          __file__,                               __page__
+                    }
+                  ;( if type >= sbaChapter_tMaximum -> failInternal )
+                    movzx               __tmp2__,                               word  [ __yentry__ ]
+                    cmp                 __tmp2__,                               sbaChapter_tMaximum
+                    ja                  .failInternal
+                  ;( else )
+                  ;{
+                    onDebug
+                    {
+                      ;( echo yapter-description )
+                        ;> echo '[yapter]    > ' + yapter.description
+                        echo_put        .myTab1
+                        mov             sys1arg,                                qword [ .mVectors + __tmp2__ * 8 ]
+                        flags           sys1arg
+                        jz              .failInternal
+                        movzx           sys2arg,                                word  [ sys1arg - 2 ]
+                        echo_put
+                    }
+                    ;( execute yapter-related build-function )
+                      mov               rax,                                    qword [ .lVectors + __tmp2__ * 8 ]
+                      flags             rax
+                      jz                .failInternal                           ;every entry in vector-table should be valid
+                      jmp               rax
+                    ;( select type )
+                    ;{
+                      .lNextColumn:
+                      ;{
+                        mov             __yentry__,                             qword [ rbx + .next ]
+                        mov             qword [ __file__ + files.ycolumn ],     __yentry__
+                        add             __yentry__,                             ( 16 )
+                        jmp             .lReturn
+                      ;}
+                      ;( look for yapter unique id )
+                      .lCUID:
+                        ;( I/O )
+                        ;{
+                        ;:  rax         cuid                                    entry you looked for
+                        ;:  rdx         ignored                                 table-frame-size
+                        ;:  __yentry__  current yentry                          unchanged
+                        ;}
+                      ;{
+                        ;( if cuid != null )
+                          flags         rax
+                          jz            .lCUID.null
+                        ;{
+                          ;( cuid > cuid-maximum -> failCUID )
+                            ;dec         rax
+                            movzx       rdx,                                    word  [ __file__ + files.ycuid ]
+                            ;echo_state
+                            cmp         rax,                                    rdx
+                            ja          .failCUID
+                          mov           qword [ __file__ + files.yentry ],      __yentry__                              ;store current yentry
+                          movzx         rdx,                                    word  [ .length ]                       ;#size = full table-frame-size
+                          mov           __yentry__,                             qword [ __file__ + files.ytable ]       ;*table
+                          shl           rax,                                    ( 4 )                                   ;#offset = #cuid * table-line-size (16)
+                          sub           rdx,                                    ( 16 )                                  ;#size = real table-frame-size without *next and *stop
+                          .lCUID.loop:
+                          ;( if yentry = NULL -> failCUID )
+                            flags       __yentry__
+                            jz          .failCUID
+                          ;( while ( 16 * cuid ) > 0 )
+                            sub         rax,                                    rdx                                     ;check whether #cuid is inside the current table-frame or not
+                          ;{
+                            cmovns      __yentry__,                             qword [ __yentry__ + .next ]            ;if not, goto next table-frame and try again:
+                            jns         .lCUID.loop                                                                     ;*table = *table.next
+                          ;}
+                          ;( done )
+                          ;{
+                            add         rax,                                    __yentry__                              ;rax = rax + *table
+                            add         rax,                                    rdx                                     ;rax = rax - rdx + rdx
+                            mov         __yentry__,                             qword [ __file__ + files.yentry ]       ;load current yentry
+                            clc
+                            ret
+                          ;}
+                        ;}
+                        ;( else )
+                          .lCUID.null:
+                        ;{
+                          mov           __yentry__,                             qword [ __file__ + files.yentry ]       ;load current yentry
+                          null          rax
+                          stc
+                          ret
+                        ;}
+                        .lAlign:
+                          ;( I/O )
+                          ;{
+                          ;:  sys1arg   ignored                                 *ycontent
+                          ;}
+                        ;{
+                          push          rdx
+                          mov           sys1arg,                                qword [ .current ]
+                          add           sys1arg,                                ( page_size - 1 )
+                          and           sys1arg,                                ( 0 - page_size )
+                          mov           qword [ .current ],                     sys1arg
+                          pop           rdx
+                          ret
+                        ;}
+                      ;}
+                      .lCode:
+                      ;{
+                        mov             rsi,                                    qword [ __yentry__ + .ySelf ]
+                        call            files.seekBase
+                        call            .lAlign
+                        movzx           sys2arg,                                word  [ __yentry__ + .ySize ]
+                        call            files.getTo
+                        call            files.seekBack
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgCode
+                          call          .hexDump
+                          echo_put      .myTab2
+                          echo_put      .msgFrom
+                          echo_hexValue ( __yentry__ + .ySelf ),                ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgHere
+                          echo_hexValue .current,                               ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgSize
+                          echo_hexValue ( __yentry__ + .ySize ),                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgResv
+                          echo_hexValue ( __yentry__ + .yResv ),                ( 2 )
+                          echo_n
+                        }
+;                        mov             sys2arg,                                ( MMAP_pR )
+;                        movzx           sys1arg,                                word  [ __yentry__ + .yResv     ]
+                        mov             sys0arg,                                qword [ .current                ]
+                        mov             qword [ __yentry__ + .ySelf ],          sys0arg
+                        onError_put
+                        onError_fail    .failInternal
+                        movzx           rax,                                    word  [ __yentry__ + .yResv     ]
+                        add             qword [ .current ],                     rax
+                        jmp             .load
+                      ;}
+                      .lModule:
+                      ;{
+                        .self_symbols   equ                                     r8
+                        .self_pointers  equ                                     r9
+                        .self_count     equ                                     rdx
+                        .self_file      equ                                     __file__
+                        .mod_symbols    equ                                     r10
+                        .mod_pointers   equ                                     r11
+                        .mod_count      equ                                     r12
+                        .mod_file       equ                                     __file__
+                        ;( set some variables )
+                          push          .self_file
+                          mov           .self_pointers,                         qword [ .current                      ]
+                          mov           .mod_file,                              qword [ __yentry__  + .ySelf          ]
+                          push          .self_pointers
+                          cmp           qword [ .mod_file   + files.self ],     null
+                          je            .lModule.yalib
+                          mov           rax,                                    qword [ .mod_file   + files.ysymbols  ]
+                          push          .self_pointers
+                          mov           .self_symbols,                          qword [ rax         + .ySelf          ]
+                          mov           rdx,                                    qword [ .mod_file   + files.st_dev    ] ;device
+                          push          .self_symbols
+                          mov           rax,                                    qword [ .mod_file   + files.st_ino    ] ;inode
+                        ;( is file already opened? )
+                          .lModule.look:
+                            mov         .mod_file,                              qword [ .mod_file   + files.last      ]
+                            flags       .mod_file
+                            jz          .lModule.open
+                            cmp         qword [ .mod_file + files.st_ino  ],    rax
+                            je          .lModule.found
+                            jmp         .lModule.look
+                          .lModule.open:
+                            ;( nope, parse new file )
+                              mov       .mod_file,                              qword [ __yentry__  + .ySelf          ]
+                              mov       word  [ .mod_file + files.ystate    ],  sbaYapter_mBuildModule
+                              push      __yentry__
+                                call    .open
+                              pop       __yentry__
+                              jc        .failSilentPOP2
+                              jmp       .lModule.next
+                          .lModule.yalib:
+                            mov         rax,                                    qword [ .mod_file   + files.ypages    ]
+                            mov         .mod_symbols,                           qword [ .mod_file   + files.ysymbols  ]
+                            mov         .self_symbols,                          qword [ rax         + .ySelf          ]
+                            mov         .mod_pointers,                          qword [ .mod_file   + files.ypointers ]
+                            jmp         .lModule.yalib.next
+                          .lModule.found:
+                            cmp         qword [ .mod_file + files.st_dev    ],  rdx
+                            jne         .lModule.look
+                            ;( yep, close duplicate )
+                              mov       sys0arg,                                qword [ __yentry__  + .ySelf          ]
+                              call      files.close
+                            ;( if file.type != <module> -> failModule )
+                              mov       ax,                                     word  [ .mod_file   + files.ystate    ]
+                              and       ax,                                     sbaYapter_mMaskType
+                              cmp       ax,                                     sbaYapter_mModule
+                              jne       .failModule
+                          .lModule.next:
+                          ;*file -> *module
+                          mov           .mod_symbols,                           qword [ .mod_file   + files.ysymbols  ]
+                          pop           .self_symbols
+                          mov           .mod_pointers,                          qword [ .mod_file   + files.ypointers ]
+                          pop           .self_pointers
+                          .lModule.yalib.next:
+                          movzx         .mod_count,                             word  [ .mod_file   + files.ycount    ]
+                          movzx         .self_count,                            word  [ __yentry__  + .yCounter       ]
+                          ;( if mod_count < self_count -> failEnoughSymbols )
+                            cmp         .mod_count,                             .self_count
+                            jb          .failEnoughSymbols
+                          mov           rsi,                                    qword [ .self_symbols                 ]
+                          null          rdi
+                          jmp           .lModule.start
+                          .lModule.reset:
+                            mov         rsi,                                    qword [ .self_symbols                 ]
+                          .lModule.loop:
+                            dec         .mod_count
+                            jz          .failSymbol404
+                            add         .mod_symbols,                           8
+                            add         .mod_pointers,                          8
+                          .lModule.start:
+                            mov         rdi,                                    qword [ .mod_symbols                  ]
+                            movzx       rcx,                                    word  [ rdi - 2 ]
+                            ;debugModule
+                            cmp         word  [ rsi - 2 ],                      cx
+                            jne         .lModule.loop
+                            repe        cmpsb
+                            jnz         .lModule.reset
+                            ;( strings are equal )
+                              mov       rax,                                    qword [ .mod_pointers ]
+                              mov       qword [ .self_pointers ],               rax
+                              add       .self_symbols,                          8
+                              add       .self_pointers,                         8
+                              dec       .self_count
+                              jz        .lModule.final
+                              jmp       .lModule.reset
+                          .lModule.final:
+                            mov         qword [ .current ],                     .self_pointers
+                            pop         rbx
+                            movzx       __tmp2__,                               word  [ __yentry__  + .yCounter       ]
+                          .lModule.debug:
+                            onDebug
+                            {
+                              echo_put    .myTabPointer
+                              echo_hexReg rbx
+                              echo_put    .msgPointHex
+                              echo_hexVal rbx,                                  8
+                              echo_n
+                            }
+                            add         rbx,                                    8
+                            dec         __tmp2__
+                            jnz         .lModule.debug
+                          pop           .self_file
+                          jmp           .load
+                      ;}
+                      .lPointers:
+                      ;{
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgPointers
+                        }
+                        mov             rsi,                                    qword [ __yentry__ + .ySelf ]
+                        call            files.seekBase
+                        movzx           __tmp3__,                               word  [ __yentry__ + .yAmount ]
+                        mov             __tmp2__,                               qword [ .current ]
+                        flags           __tmp3__
+                        jz              .lPointers.return
+                        lea             rax,                                    [ __tmp3__ * 8 ]
+                        mov             qword [ __yentry__ + .ySelf ],          __tmp2__
+                        mov             word  [ __yentry__ + .yResv  ],         ax
+                        .lPointers.loop:
+                          getQ@__file__
+                          mov           rbx,                                    qword [ __file__ + files.ycontent ]
+                          add           rbx,                                    rax
+                          jc            .failPointers
+                          mov           qword [ __tmp2__ ],                     rbx
+                          onDebug
+                          {
+                            echo_put    .myTabSymbol
+                            echo_hexReg __tmp2__
+                            echo_put    .msgPointHex
+                            echo_hexReg rbx
+                            echo_n
+                          }
+                          add           __tmp2__,                               8
+                          dec           __tmp3__
+                          jnz           .lPointers.loop
+                        .lPointers.return:
+                        call            files.seekBack
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgHere
+                          echo_hexValue ( __yentry__ + .ySelf ),                ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgSize
+                          echo_hexValue ( __yentry__ + .yResv ),                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgResv
+                          echo_hexValue ( __yentry__ + .yResv ),                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgCount
+                          echo_hexValue ( __yentry__ + .ySize ),                ( 2 )
+                          echo_n
+                        }
+                        mov             qword [ .current ],                     __tmp2__
+                        jmp             .load
+                      ;}
+                      .lSymbols:
+                      ;{
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgSymbols
+                          .lBuffers.symbols:
+                        }
+                        onAlone
+                        {
+                          .lBuffers:
+                        }
+                        mov             rsi,                                    qword [ __yentry__ + .ySelf ]
+                        call            files.seekBase
+                        movzx           __tmp3__,                               word  [ __yentry__ + .ySize ]
+                        mov             __tmp2__,                               qword [ .current ]
+                        flags           __tmp3__
+                        jz              .lSymbols.return
+                        lea             rax,                                    [ __tmp3__ * 8 ]
+                        mov             qword [ __yentry__ + .ySelf ],          __tmp2__
+                        mov             word  [ __yentry__ + .yResv  ],         ax
+                        add             qword [ .current ],                     rax
+                        null            rbx
+                        .lSymbols.loop:
+                          getL@__file__
+                          lea           rbx,                                    [ rbx + rcx + 2 ]
+                          getS@__file__
+                          lea           rdi,                                    [ rdi + 2 ]
+                          jc            .failSymbols
+                          mov           qword [ __tmp2__ ],                     rdi
+                          onDebug
+                          {
+                            echo_put    .myTabSymbol
+                            echo_hexReg __tmp2__
+                            echo_put    .msgPoint
+                            echo_hexVal __tmp2__,                               ( 8 )
+                            echo_put    .msgPoint
+                            mov         sys1arg,                                qword [ __tmp2__ ]
+                            movzx       sys2arg,                                word  [ sys1arg - 2 ]
+                            echo_put
+                            echo_n
+                          }
+                          add           __tmp2__,                               ( 8 )
+                          dec           __tmp3__
+                          jnz           .lSymbols.loop
+                        .lSymbols.return:
+                        call            files.seekBack
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgHere
+                          echo_hexValue ( __yentry__ + .ySelf ),                ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgSize
+                          mov           qword [ .number ],                      rbx
+                          echo_hexValue .number,                                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgResv
+                          echo_hexValue ( __yentry__ + .yResv ),                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgCount
+                          echo_hexValue ( __yentry__ + .ySize ),                ( 2 )
+                          echo_n
+                        }
+                        jmp             .load
+                      ;}
+                      .lRandom:
+                      ;{
+                        mov             sys0arg,                                qword [ .current ]
+                        movzx           sys1arg,                                word  [ __yentry__ + .yResv ]
+                        null            sys2arg
+                        mov             qword [ __yentry__ + .ySelf ],          sys0arg
+                        add             qword [ .current ],                     sys1arg
+                        mov             __tmp3__,                               sys0arg
+                        sys_call        sys_getrandom
+                        flags           sys0ret
+                        onDebug
+                        {
+                          jns           @f
+                        }
+                        onAlone
+                        {
+                          jns           .load
+                        }
+                        ;{
+                          mov           sys1arg,                                file_modeR
+                          lea           sys0arg,                                [ yapter.dev_random ]
+                          sys_call      sys_open
+                          ;{
+                            mov         sys1arg,                                qword [ __yentry__ + .ySelf ]
+                            mov         sys0arg,                                sys0ret
+                            movzx       sys2arg,                                word  [ __yentry__ + .yResv ]
+                            sys_call    sys_read
+                            onError_put
+                            onAlone
+                            {
+                              jmp       .load
+                            }
+                          ;}
+                        ;}
+                        @@:
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgRandom
+                          call          .hexDump.pseudo
+                          echo_put      .myTab2
+                          echo_put      .msgHere
+                          echo_hexValue ( __yentry__ + .ySelf ),                ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgSize
+                          echo_hexValue ( __yentry__ + .ySize ),                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgResv
+                          echo_hexValue ( __yentry__ + .yResv ),                ( 2 )
+                          echo_n
+                          jmp           .load
+                        }
+                      ;}
+                      onDebug
+                      {
+                        .lBuffers:
+                        ;{
+                          echo_put      .myTab2
+                          echo_put      .msgBuffers
+                          jmp           .lBuffers.symbols
+                        ;}
+                      }
+                      .lConst:
+                      ;{
+                        jmp             .load
+                      ;}
+                      .lStack:
+                      ;{
+                        jmp             .load
+                      ;}
+                      .lData:
+                      ;{
+                        mov             rsi,                                    qword [ __yentry__ + .ySelf ]
+                        call            files.seekBase
+                        call            .lAlign
+                        movzx           sys2arg,                                word  [ __yentry__ + .ySize ]
+                        call            files.getTo
+                        call            files.seekBack
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          echo_put      .msgData
+                          call          .hexDump
+                          echo_put      .myTab2
+                          echo_put      .msgFrom
+                          echo_hexValue ( __yentry__ + .ySelf ),                ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgHere
+                          echo_hexValue .current,                               ( 8 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgSize
+                          echo_hexValue ( __yentry__ + .ySize ),                ( 2 )
+                          echo_n
+                          echo_put      .myTab2
+                          echo_put      .msgResv
+                          echo_hexValue ( __yentry__ + .yResv ),                ( 2 )
+                          echo_n
+                        }
+;                        mov             sys2arg,                                ( MMAP_pRW )
+;                        movzx           sys1arg,                                word  [ __yentry__ + .yResv ]
+;                        mov             sys0arg,                                qword [ .current ]
+;                        mov             qword [ __yentry__ + .ySelf ],          sys0arg
+;                        onError_put
+;                        onError_fail    .failInternal
+                        movzx           rax,                                    word  [ __yentry__ + .yResv ]
+                        add             qword [ .current ],                     rax
+                        jmp             .load
+                      ;}
+                      .lNote:
+                      ;{
+                        onDebug
+                        {
+                          echo_put      .myTab2
+                          mov           rax,                                    qword [ __yentry__ + .ySelf ]
+                          movzx         sys2arg,                                word  [ rax ]
+                          lea           sys1arg,                                [ rax + 2 ]
+                          mov           sys0arg,                                STDOUT
+                          sys_call      sys_write
+                          echo_n
+                        }
+                        jmp             .load
+                      ;}
+                      .lFinal:
+                      ;{
+                        ;( select mode )
+                          mov           ax,                                     word  [ __file__ + files.ystate ]
+                        ;{
+                          ;( case <load executable> )
+                            cmp         ax,                                     sbaYapter_mLoadExecutable
+                            je          .lFinal.exec
+                          ;( case <load module> )
+                            cmp         ax,                                     sbaYapter_mLoadModule
+                            je          .lFinal.module
+                          ;( case <load setup> )
+                            cmp         ax,                                     sbaYapter_mLoadSetup
+                            je          .lFinal.setup
+                          ;( default ( just in case ))
+                            jmp         .failFaultyState
+                        ;}
+                        .lFinal.exec:
+                        ;{
+                          movzx         rax,                                    word  [ __yentry__ + .yInit ]
+                          call          .lCUID
+                          jc            .failExecution
+                          mov           rdx,                                    qword [ rax + .ySelf ]
+                          mov           qword [ inputFile.addr ],               rdx
+                          lea           sys0arg,                                [ .memoryDumpYapic ]
+                          call          .lFinal.dump
+                          onDebug
+                          {
+                            echo_put    .msgExecution
+                          }
+                          mov           sys2arg,                                MPROTECT_pNone
+                          mov           sys1arg,                                qword [ __file__ + files.ypages ]
+                          mov           sys0arg,                                qword [ __file__ + files.ycontent ]
+                          sys_call      sys_mprotect
+                          mov           sys2arg,                                MPROTECT_pRW
+                          mov           sys1arg,                                qword [ __file__ + files.ypages ]
+                          mov           sys0arg,                                qword [ __file__ + files.ycontent ]
+                          sys_call      sys_mprotect
+                          null          rax, rbx, rcx, rdx, rsi, rdi, r8, r9, r10, r11, r12, r13, r14, r15
+                          jmp           qword [ inputFile.addr ]
+                        ;}
+                        .lFinal.module:
+                        ;{
+                          onDebug
+                          {
+                            echo_put    .myTab2
+                            echo_put    .msgCuid
+                            echo_hexVal ( __yentry__ + .ySymbols ),             2
+                            echo_n
+                            echo_put    .myTab2
+                            echo_put    .msgCount
+                            echo_hexVal ( __yentry__ + .yCounter ),             2
+                            echo_n
+                            echo_put    .myTab2
+                            echo_put    .msgResv
+                            echo_hexVal ( __yentry__ + .yResv ),                2
+                            echo_n
+                          }
+                          movzx         rax,                                    word  [ __yentry__ + .ySymbols      ]
+                          call          .lCUID
+                          jc            .failModuleSymbols
+                          cmp           word  [ rax + .yType ],                 sbaYapter_tSymbols
+                          mov           rcx,                                    2
+                          jne           .failModuleSymbols
+                          mov           __tmp2__,                               qword [ rax + .ySelf                ]
+                          movzx         rbx,                                    word  [ rax + .yAmount              ]
+                          movzx         rax,                                    word  [ __yentry__ + .yPointers     ]
+                          call          .lCUID
+                          jc            .failModulePointers
+                          cmp           word  [ rax + .yType ],                 sbaYapter_tPointers
+                          jne           .failModulePointers
+                          onAlone
+                          {
+                            mov         rdx,                                    qword [ __file__ + files.ycontent   ]
+                          }
+                          cmp           word  [ rax + .yAmount ],               bx
+                          jne           .failEquality
+                          mov           qword [ __file__ + files.ysymbols ],    __tmp2__
+                          mov           __tmp3__,                               qword [ rax + .ySelf                ]
+                          mov           word  [ __file__ + files.ycount ],      bx
+                          onDebug
+                          {
+                            echo_put    .myTab2
+                            echo_put    .msgAssign
+                          }
+                          mov           qword [ __file__ + files.ypointers ],   __tmp3__
+                          .lFinal.loop:
+                          onDebug
+                          {
+                            echo_put    .myTabSymbol
+                            echo_hexVal __tmp3__,                               ( 8 )
+                            echo_put    .msgPoint
+                            mov         sys1arg,                                qword [ __tmp2__ ]
+                            movzx       sys2arg,                                word  [ sys1arg - 2 ]
+                            echo_put
+                            echo_n
+;                            mov         rax,                                    qword [ __tmp3__                    ]
+;                            add         rax,                                    qword [ __file__ + files.ycontent   ]
+;                            mov         qword [ __tmp3__ ],                     rax
+;                            echo_hexReg rax
+;                            echo_put    .msgPoint
+;                            echo_put    __tmp2__,                               word  [ __tmp2__ - 2 ]
+;                            echo_n
+                          }
+                          ;{
+                            add         __tmp2__,                               8
+                            add         __tmp3__,                               8
+                            dec         rbx
+                            jnz         .lFinal.loop
+                          ;}
+                          onDebug
+                          {
+                            echo_put    .msgReturn
+                          }
+                          lea           sys0arg,                                [ .memoryDumpYalib ]
+                          call          .lFinal.dump
+                          ret
+;                          movzx         rax,                                    word  [ __file__ + files.ycount     ]
+;                          shl           rax,                                    ( 3 )
+;                          mov           __file__,                               qword [ __file__ + files.last       ]
+;                          mov           __yentry__,                             qword [ __file__ + files.yentry     ]
+;                          add           qword [ __file__ + files.ypages ],      rax
+;                          mov           ax,                                     word  [ __file__ + files.ystored    ]
+;                          mov           word  [ .line + .ySymbols ],            ax
+;                          jmp           .bInsert
+                        ;}
+                        .lFinal.setup:
+                        ;{
+                          ret
+                        ;}
+                        .lFinal.dump: ;sys0arg *filename
+                        ;{
+                          mov           sys2arg,                                ( file_ownerRW + file_groupR + file_otherR )
+                          mov           sys1arg,                                file_modeC
+                          sys_call      sys_open
+                          mov           rbx,                                    rax
+                          mov           sys2arg,                                qword [ __file__ + files.ypages ]
+                          mov           sys1arg,                                qword [ __file__ + files.ycontent ]
+                          mov           sys0arg,                                rbx
+                          sys_call      sys_write
+                          mov           sys0arg,                                rbx
+                          sys_call      sys_close
+                          ret
+                        ;}
+                      ;}
+                    ;}
+                  ;}
+                ;}
+              ;}
+            ;}
+          ;}
+        ;}
+      ;}
+    ;}
+  ;}
+  onDebug
+  {
+    .hexDump:
+      mov                               __tmp3__,                               qword [ .current ]
+    .hexDump.pseudo:
+      movzx                             __tmp2__,                               word  [ __yentry__ + .ySize ]
+      add                               __tmp2__,                               ( 63 )
+      and                               __tmp2__,                               ( 0 - 64 )
+      shr                               __tmp2__,                               ( 6 )
+      .hexDump.loop:
+      ;{
+        flags                           __tmp2__
+        jz                              .hexDump.final
+        echo_put                        .msgHex
+        mov                             rax,                                    qword [ .number ]
+        mov                             qword [ echo.hexRegister ],             rax
+        add                             rax,                                    ( 64 )
+        mov                             qword [ .number ],                      rax
+        echo_hexValue                   echo.hexRegister,                       ( 2 )
+        echo_s
+        echo_hexBuffer                  __tmp3__,                               ( 64 )
+        echo_s
+        mov                             rcx,                                    ( 64 )
+        mov                             rsi,                                    __tmp3__
+        lea                             rdi,                                    [ .hexLine ]
+        mov                             bx,                                     '.'
+        @@:
+        ;{
+          lodsb
+          cmp                           al,                                     machine_sWhitespace
+          cmovb                         ax,                                     bx
+          cmp                           al,                                     machine_sDEL
+          cmovae                        ax,                                     bx
+          stosb
+        ;}
+        dec                             rcx
+        jnz                             @b
+        echo_put                        .hexLine,                               ( 64 )
+        echo_n
+        dec                             __tmp2__
+        add                             __tmp3__,                               ( 64 )
+      ;}
+      jmp                               .hexDump.loop
+      .hexDump.final:
+        mov                             qword [ .number ],                      ( 0 )
+        ret
+    .failReturn:
+      mov                               sys0arg,                                STDOUT
+      sys_call                          sys_write
+      stc
+      ret
+    .failSilentPOP2:
+      add                               rsp,                                    ( 8 * 2 )
+    .failSilent:
+      stc
+      ret
+    .failBelow:
+      ;> echo '[yapter] fail: there are more symbols than pointers!'
+      echo_msgLoad                      .msgFailBelow
+      jmp                               .failReturn
+    .failCUID:
+      ;> echo '[yapter] fail: invalid CUID was used! must be between null and current CUID.'
+      echo_msgLoad                      .msgFailCUID
+      jmp                               .failReturn
+    .failDummy:
+      ;> echo '[yapter] epic fail: something is wrong!'
+      echo_msgLoad                      .msgFailDummy
+      jmp                               .failReturn
+    .failEnoughSymbols:
+      ;> echo '[yapter] fail: module does not have enough symbols!'
+      echo_msgLoad                      .msgFailEnoughSymbols
+      jmp                               .failReturn
+    .failEquality:
+      ;> echo '[yapter] fail: number of symbols and pointers are not equal!'
+      echo_msgLoad                      .msgFailEquality
+      jmp                               .failReturn
+    .failExecutable:
+      ;> echo '[yapter] fail: try to process an executable but found a module!'
+      echo_msgLoad                      .msgFailExecutable
+      jmp                               .failReturn
+    .failExecution:
+      ;> echo '[yapter] fail: try to process an executable but failed to execute it!'
+      echo_msgLoad                      .msgFailExecutable
+      jmp                               .failReturn
+    .failFaultyState:
+      ;> echo '[yapter] fail: an internal error occured: unknown state?!'
+      echo_msgLoad                      .msgFailFaultyState
+      jmp                               .failReturn
+    .failFile:
+      ;> echo '[yapter] fail: *file is invalid!'
+      echo_msgLoad                      .msgFailFile
+      jmp                               .failReturn
+    .failFileEOF:
+      ;> echo '[yapter] fail: end of *file was reached!'
+      echo_msgLoad                      .msgFailFileEOF
+      jmp                               .failReturn
+    .failInputFile:
+      ;> echo '[yapter] fail: something is wrong with the input-file!'
+      echo_msgLoad                      .msgFailInputFile
+      jmp                               .failReturn
+    .failInternal:
+      ;> echo '[yapter] fail: an internal error occured!'
+      echo_msgLoad                      .msgFailInternal
+      jmp                               .failReturn
+    .failMagic:
+      ;> echo '[yapter] fail: invalid magic number of yapter! sba-file could be corrupt.'
+      echo_msgLoad                      .msgFailMagic
+      jmp                               .failReturn
+    .failModule:
+      ;> echo '[yapter] fail: try to process a module but found an executable or setup!'
+      echo_msgLoad                      .msgFailModule
+      jmp                               .failReturn
+    .failModuleDone:
+      ;> echo '[yapter] fail: try to process a module but could not find every symbol!'
+      echo_msgLoad                      .msgFailModuleDone
+      pop                               __yentry__
+      jmp                               .failReturn
+    .failModulePointers:
+      ;> echo '[yapter] fail: try to process a module but pointer-yapter is invalid!'
+      echo_msgLoad                      .msgFailModulePointers
+      jmp                               .failReturn
+    .failModuleSymbols:
+      ;> echo '[yapter] fail: try to process a module but symbol-yapter is invalid!'
+      echo_state
+      echo_msgLoad                      .msgFailModuleSymbols
+      jmp                               .failReturn
+    .failPointers:
+      ;> echo '[yapter] fail: this pointer-table is corrupt!'
+      echo_msgLoad                      .msgFailPointers
+      jmp                               .failReturn
+    .failSetup:
+      ;> echo '[yapter] fail: try to process a setup but found a module!'
+      echo_msgLoad                      .msgFailExecutable
+      jmp                               .failReturn
+    .failSignature:
+      ;> echo '[yapter] fail: signature had to start with »#!sba64\n«!'
+      echo_msgLoad                      .msgFailSignature
+      jmp                               .failReturn
+    .failSymbol404:
+      add                               rsp,                                    ( 1 * 8 )
+      ;> echo '[yapter] fail: symbol could not found in module!'
+      echo_msgLoad                      .msgFailSymbol404
+      jmp                               .failReturn
+    .failSymbols:
+      ;> echo '[yapter] fail: this symbol-table is corrupt!'
+      echo_msgLoad                      .msgFailSymbols
+      jmp                               .failReturn
+    .failYapterUnknown:
+      ;> echo '[yapter] fail: unknown yapter was found!'
+      echo_msgLoad                      .myUnknown
+      jmp                               .failReturn
+  }
+  onAlone
+  {
+    .failSilentPOP2:
+      add                               rsp,                                    ( 1 * 8 )
+    .failSymbol404:
+      add                               rsp,                                    ( 1 * 8 )
+    .failCUID:
+    .failDummy:
+    .failEnoughSymbols:
+    .failEquality:
+    .failExecutable:
+    .failExecution:
+    .failFaultyState:
+    .failFile:
+    .failFileEOF:
+    .failInputFile:
+    .failInternal:
+    .failMagic:
+    .failModule:
+    .failModuleDone:
+    .failModulePointers:
+    .failModuleSymbols:
+    .failPointers:
+    .failSetup:
+    .failSignature:
+    .failSymbols:
+    .failYapterUnknown:
+    .failReturn:
+    .failSilent:
+      stc
+      ret
+  }

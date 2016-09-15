@@ -1,0 +1,35 @@
+;yalave.start                            dq                                      0x0000000100000000
+;teststring                              db                                      '1337', 10
+;save.locate                             dq                                      stub.locate
+;save.lenght                             dq                                      stub.lenght
+;save.size                               dq                                      _size_
+inputFile:
+  .name                                 rq                                      1
+  .addr                                 rq                                      1
+;  .handle                               rq                                      1
+;  .page                                 rq                                      1
+;yalave.addr                             rq                                      1
+;inputBuffer:
+;sbaChapterLoad:
+;  .type                                 rb                                      1
+;  .flags                                rb                                      1
+;  .size                                 rd                                      1
+;  .posChapter                           rd                                      1
+;  .lenChapter                           rd                                      1
+;  .strName                              rd                                      1
+;  .lenName                              rw                                      1
+;  .name                                 rb                                      256
+;mmap:
+;  .address:
+;  .addressL                             rb                                      4
+;  .addressH                             rb                                      4
+;  .prot                                 rb                                      4
+;  .flags                                rb                                      4
+;  .line                                 rb                                      8
+;asciiLine                               rb                                      64
+;yalave:
+;  .address                              rb                                      8
+;  .idk                                  rb                                      8
+;                                        rb                                      ( inputBuffer + 4096 - $ )
+;pad
+;_size_                                  =                                       ( $ - ( _start_ and 0xfffffffffffff000 ))

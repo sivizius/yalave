@@ -1,0 +1,50 @@
+main:
+  env_init
+  onDebug
+  {
+    env_echo                            .failInputFile,                         .msgMySelf
+    echo_put                            .msgOpenEnd
+  }
+  onAlone
+  {
+    env_void                            .failInputFile
+  }
+  env_save                              .failInputFile,                         inputFile.name
+  onDebug
+  {
+    echo_put                            .msgOpen
+    buffers_echo                        qword [ inputFile.name ]
+    echo_put                            .msgOpenEnd
+  }
+    echo_blink
+  yapter_init                           qword [ inputFile.name ]
+  onDebug
+  {
+    echo_blink
+    echo_blink
+    echo_blink
+  }
+  jmp                                   .final
+onDebug
+{
+  .failInputFile:
+    echo_msgLoad                        .msgFailInputFile
+    jmp                                 .failReturn
+  .failInternal:
+    echo_msgLoad                        .msgFailInternal
+;    jmp                                 .failReturn
+  .failReturn:
+    echo_put
+  .final:
+    null                                sys0arg
+    sys_call                            sys_exit_group
+}
+onAlone
+{
+  .failInputFile:
+  .failInternal:
+  .failReturn:
+  .final:
+    null                                sys0arg
+    sys_call                            sys_exit_group
+}

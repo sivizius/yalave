@@ -1,0 +1,116 @@
+yapter.pathLibraries                    str                                     '/home/sivizius/sba/lib/libraries/', 0
+yapter.memoryDumpYapic                  str                                     '/home/sivizius/sba/out/jufo16/yapic.bin', 0
+yapter.memoryDumpYalib                  str                                     '/home/sivizius/sba/out/jufo16/yalib.bin', 0
+yapter.dev_random                       str                                     '/dev/random', 0
+yapter.yalib                            str                                     'yalib!'
+yapter.signature                        str                                     '#!sba64', 10
+onDebug
+{
+  yapter.msgExecution                   str                                     '[yapter] == execution ==', 10
+  yapter.msgReturn                      str                                     '[yapter] < return', 10
+  yapter.msgBuild                       str                                     '<TYPE>          %CUID   #TYPE  #SIZE  #RESV  #MISC  @SELF', 10
+  yapter.msgLoad                        str                                     '[yapter] load:', 10
+  yapter.msgType                        str                                         '[yapter]   type: 0x'
+  yapter.msgPayload                     str                                     10, '[yapter]   self: '
+  yapter.myTab0                         str                                     '[yapter] > '
+  yapter.myTab1                         str                                     '[yapter]   > '
+  yapter.myTab2                         str                                     '[yapter]     > '
+  yapter.myTabPointer                   str                                     '[yapter] > *0x'
+  yapter.myTabSymbol                    str                                     '[yapter]       > *0x'
+  yapter.myFinal                        str                                     'final chapter, there are no more yapters left.', 10
+  yapter.myNote                         str                                     'just a note, ignore this.', 10
+  yapter.myData                         str                                     'just data.', 10
+  yapter.myStack                        str                                     'just a stack.', 10
+  yapter.myConst                        str                                     'just data, but readonly.', 10
+  yapter.myBuffers                      str                                     'load some buffers.', 10
+  yapter.myRandom                       str                                     'load some random bytes here.', 10
+  yapter.mySymbols                      str                                     'just a bunch of symbols.', 10
+  yapter.myPointers                     str                                     'just a bunch of pointers.', 10
+  yapter.myModule                       str                                     'load sba-file as module.', 10
+  yapter.myTypeInfo                     str                                     'something about the types.', 10
+  yapter.mySymbolInfo                   str                                     'something about the symbols.', 10
+  yapter.myFBBC_0                       str                                     'fruitbot bytecode v0.9.1.', 10
+  yapter.myx86_16                       str                                     '16bit x86-code.', 10
+  yapter.myx86_32                       str                                     '32bit x86-code.', 10
+  yapter.myx86_64                       str                                     '64bit x86-code.', 10
+  yapter.typeName                       str                                     '<'
+  yapter.typeCUID                       str                                     ' %0x'
+  yapter.typeWord                       str                                     ' 0x'
+  yapter.typeSelf                       str                                               '[yapter]   self: '
+  yapter.typeFinal                      str                                     'final>        '
+  yapter.typeInterface                  str                                     'interface>    '
+  yapter.typeNote                       str                                     'note>         '
+  yapter.typeData                       str                                     'data>         '
+  yapter.typeStack                      str                                     'stack>        '
+  yapter.typeConst                      str                                     'const>        '
+  yapter.typeBuffers                    str                                     'buffers>      '
+  yapter.typeRandom                     str                                     'random>       '
+  yapter.typeSymbols                    str                                     'symbols>      '
+  yapter.typePointers                   str                                     'pointers>     '
+  yapter.typeModule                     str                                     'module>       '
+  yapter.typeTypeInfo                   str                                     'type-info>    '
+  yapter.typeSymbolInfo                 str                                     'symbol-info>  '
+  yapter.typeFBBC_0                     str                                     'fbbc0-code>   '
+  yapter.typex86_16                     str                                     'x86_16-code>  '
+  yapter.typex86_32                     str                                     'x86_32-code>  '
+  yapter.typex86_64                     str                                     'x86_64-code>  '
+  yapter.msgCode                        str                                     'code:', 10
+  yapter.msgData                        str                                     'data:', 10
+  yapter.msgRandom                      str                                     'random:', 10
+  yapter.msgAssign                      str                                     'assign:', 10
+  yapter.msgSymbols                     str                                     'symbols:', 10
+  yapter.msgBuffers                     str                                     'buffers:', 10
+  yapter.msgPointers                    str                                     'pointers:', 10
+  yapter.msgFrom                        str                                     'from:  @0x'
+  yapter.msgHere                        str                                     'here:  *0x'
+  yapter.msgStop                        str                                     'stop:  *0x'
+  yapter.msgResv                        str                                     'resv:   0x'
+  yapter.msgSize                        str                                     'size:   0x'
+  yapter.msgCount                       str                                     'count: #0x'
+  yapter.msgCuid                        str                                     'cuid:  %0x'
+  yapter.msgPoint                       str                                     ' -> '
+  yapter.msgPointHex                    str                                     ' -> *0x'
+  yapter.msgHex                         str                                     '0x'
+  yapter.msgYalib                       str                                     '[yalib] load internal module '
+  yapter.msgYalibBuffers                str                                     'buffers'
+  yapter.msgYalibEcho                   str                                     'echo'
+  yapter.msgYalibEnvironment            str                                     'environment'
+  yapter.msgYalibFiles                  str                                     'files'
+  yapter.msgYalibThreads                str                                     'threads'
+  yapter.msgYalibTime                   str                                     'time'
+  yapter.myUnknown                      str                                     '[yapter] fail: unknown yapter was found!', 10
+  yapter.msgFailBelow                   str                                     '[yapter] fail: there are more symbols than pointers!', 10
+  yapter.msgFailCUID                    str                                     '[yapter] fail: invalid CUID was used! must be between null and current CUID.', 10
+  yapter.msgFailDummy                   str                                     '[yapter] epic fail: something is wrong!', 10
+  yapter.msgFailEnoughSymbols           str                                     '[yapter] fail: module does not have enough symbols!', 10
+  yapter.msgFailEquality                str                                     '[yapter] fail: number of symbols and pointers are not equal!', 10
+  yapter.msgFailExecutable              str                                     '[yapter] fail: try to process an executable but found a module!', 10
+  yapter.msgFailExecution               str                                     '[yapter] fail: try to process an executable but failde to exexute it!', 10
+  yapter.msgFailFaultyState             str                                     '[yapter] fail: an internal error occured: unknown state?!', 10
+  yapter.msgFailFile                    str                                     '[yapter] fail: *file is invalid!', 10
+  yapter.msgFailFileEOF                 str                                     '[yapter] fail: end of *file was reached!', 10
+  yapter.msgFailInputFile               str                                     '[yapter] fail: something is wrong with the input-file!', 10
+  yapter.msgFailInternal                str                                     '[yapter] fail: an internal error occured!', 10
+  yapter.msgFailMagic                   str                                     '[yapter] fail: invalid magic number of yapter! sba-file could be corrupt.', 10
+  yapter.msgFailModule                  str                                     '[yapter] fail: try to process a module but found an executable or setup!', 10
+  yapter.msgFailModuleDone              str                                     '[yapter] fail: try to process a module but could not find every symbol!', 10
+  yapter.msgFailModulePointers          str                                     '[yapter] fail: try to process a module but the pointer-yapter is invalid!', 10
+  yapter.msgFailModuleSymbols           str                                     '[yapter] fail: try to process a module but the symbol-yapter is invalid!', 10
+  yapter.msgFailPointers                str                                     '[yapter] fail: this pointer-table is corrupt!', 10
+  yapter.msgFailSetup                   str                                     '[yapter] fail: try to process a setup but found a module!', 10
+  yapter.msgFailSignature               str                                     '[yapter] fail: signature had to start with »#!sba64\n«!', 10
+  yapter.msgFailSymbol404               str                                     '[yapter] fail: symbol could not found in module!', 10
+  yapter.msgFailSymbols                 str                                     '[yapter] fail: this symbol-table is corrupt!', 10
+  yapter.msgDebugSymbolsSelf            str                                           10, '[yapter] *sym_self: *0x'
+  yapter.msgDebugStringSelf             str                                           10, '[yapter] *str_self: *0x'
+  yapter.msgDebugPointersSelf           str                                     '«',  10, '[yapter] *ptr_self: *0x'
+  yapter.msgDebugCountSelf              str                                           10, '[yapter]  ctr_self: #0x'
+  yapter.msgDebugSymbolsModule          str                                           10, '[yapter] *sym_mod:  *0x'
+  yapter.msgDebugStringModule           str                                           10, '[yapter] *str_mod:  *0x'
+  yapter.msgDebugPointersModule         str                                     '«',  10, '[yapter] *ptr_mod:  *0x'
+  yapter.msgDebugCountModule            str                                           10, '[yapter]  ctr_mod:  #0x'
+  yapter.msgDebugStringSize             str                                           10, '[yapter]  str_size: #0x'
+  yapter.msgDebugFile                   str                                           10, '[yapter]    *file:  *0x'
+  yapter.msgDebugYentry                 str                                           10, '[yapter]  *yentry:  *0x'
+  yapter.msgDebugString                 str                                     ' -> »'
+}

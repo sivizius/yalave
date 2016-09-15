@@ -1,0 +1,74 @@
+_posInputFile_                          equ                                     r15                                     ;current position in input-file
+_posInputFile_D                         equ                                     r15d                                    ;current position in input-file
+_offInputFile_                          equ                                     r14d                                    ;offset of sbaChapter-table in input-file = size of »#!sba:stuff\n\0«
+_bufInputFile_                          equ                                     r13                                     ;-> inputFile.page
+_ptrYalaveEntry_                        equ                                     r12                                     ;-> ( yalave.addr + sbaChapter[current_chapter] )
+
+macro debugModule
+{
+  push                                  rax ;0x68
+  push                                  rbx ;0x60
+  push                                  rcx ;0x58 size_string
+  push                                  rdx ;0x50 self_count
+  push                                  rdi ;0x48 mod_string
+  push                                  rsi ;0x40 self_string
+  push                                  r8  ;0x38 self_symbols
+  push                                  r9  ;0x30 self_pointers
+  push                                  r10 ;0x28 mod_symbols
+  push                                  r11 ;0x20 mod_pointers
+  push                                  r12 ;0x18 mod_count
+  push                                  r13 ;0x10
+  push                                  r14 ;0x08 __yentry__
+  push                                  r15 ;0x00 __file__
+    echo_put                            yapter.msgDebugSymbolsSelf
+    echo_hexValue                       ( rsp + 0x38 ), 8
+    echo_put                            yapter.msgDebugStringSelf
+    echo_hexValue                       ( rsp + 0x40 ), 8
+    echo_put                            yapter.msgDebugString
+    mov                                 sys1arg,                                qword [ rsp + 0x40 ]
+    flags                               sys1arg
+    jz                                  @f
+      movzx                             sys2arg,                                word  [ sys1arg - 2 ]
+      echo_put
+    @@:
+    echo_put                            yapter.msgDebugPointersSelf
+    echo_hexValue                       ( rsp + 0x30 ), 8
+    echo_put                            yapter.msgDebugCountSelf
+    echo_hexValue                       ( rsp + 0x50 ), 2
+    echo_put                            yapter.msgDebugSymbolsModule
+    echo_hexValue                       ( rsp + 0x28 ), 8
+    echo_put                            yapter.msgDebugStringModule
+    echo_hexValue                       ( rsp + 0x48 ), 8
+    echo_put                            yapter.msgDebugString
+    mov                                 sys1arg,                                qword [ rsp + 0x48 ]
+    flags                               sys1arg
+    jz                                  @f
+      movzx                             sys2arg,                                word  [ sys1arg - 2 ]
+      echo_put
+    @@:
+    echo_put                            yapter.msgDebugPointersModule
+    echo_hexValue                       ( rsp + 0x20 ), 8
+    echo_put                            yapter.msgDebugCountModule
+    echo_hexValue                       ( rsp + 0x18 ), 2
+    echo_put                            yapter.msgDebugStringSize
+    echo_hexValue                       ( rsp + 0x58 ), 2
+    echo_put                            yapter.msgDebugFile
+    echo_hexValue                       ( rsp + 0x00 ), 8
+    echo_put                            yapter.msgDebugYentry
+    echo_hexValue                       ( rsp + 0x08 ), 8
+    echo_n
+  pop                                   r15
+  pop                                   r14
+  pop                                   r13
+  pop                                   r12
+  pop                                   r11
+  pop                                   r10
+  pop                                   r9
+  pop                                   r8
+  pop                                   rsi
+  pop                                   rdi
+  pop                                   rdx
+  pop                                   rcx
+  pop                                   rbx
+  pop                                   rax
+}

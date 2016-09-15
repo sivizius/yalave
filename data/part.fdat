@@ -1,0 +1,123 @@
+onDebug
+{
+  part.msgTable.size:
+    db  part.msgStop.size
+    db  part.msgNote.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgTypeInfo.size
+    db  part.msgPageInfo.size
+    db  part.msgSymbolInfo.size
+    db  part.msgModuleFace.size
+    db  part.msgModuleLoad.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgFake.size
+    db  part.msgData.size
+    db  part.msgStack.size
+    db  part.msgFBBC_1.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgResv.size
+    db  part.msgx86.size
+    db  part.msgx86_yaos.size
+    db  part.msgx86_linux.size
+    db  part.msgx86_windows.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgx86_64.size
+    db  part.msgx86_64_yaos.size
+    db  part.msgx86_64_linux.size
+    db  part.msgx86_64_windows.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+    db  part.msgUnknown.size
+  part.msgTable:
+    dd ( part.msgStop - part.msg )
+    dd ( part.msgNote - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgTypeInfo - part.msg )
+    dd ( part.msgPageInfo - part.msg )
+    dd ( part.msgSymbolInfo - part.msg )
+    dd ( part.msgModuleFace - part.msg )
+    dd ( part.msgModuleLoad - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgFake - part.msg )
+    dd ( part.msgData - part.msg )
+    dd ( part.msgStack - part.msg )
+    dd ( part.msgFBBC_1 - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgResv - part.msg )
+    dd ( part.msgx86 - part.msg )
+    dd ( part.msgx86_yaos - part.msg )
+    dd ( part.msgx86_linux - part.msg )
+    dd ( part.msgx86_windows - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgx86_64 - part.msg )
+    dd ( part.msgx86_64_yaos - part.msg )
+    dd ( part.msgx86_64_linux - part.msg )
+    dd ( part.msgx86_64_windows - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+    dd ( part.msgUnknown - part.msg )
+  part.msg                db    '         * '
+  part.msgStop            db    'final part, there are no more parts left.', 10
+  part.msgNote            db    'just a remark, ignore this.', 10
+  part.msgTypeInfo        db    'something about the types.', 10
+  part.msgPageInfo        db    'something about the pages.', 10
+  part.msgSymbolInfo      db    'something about the symbols.', 10
+  part.msgModuleFace      db    'interface of this module.', 10
+  part.msgModuleLoad      db    'load this module.', 10
+  part.msgData            db    'just data, maybe executable, but i do not know how.', 10
+  part.msgStack           db    'just a stack.', 10
+  part.msgFBBC_1          db    'fruitbot bytecode v0.9.1.', 10
+  part.msgx86             db    'x86-code (standalone).', 10
+  part.msgx86_yaos        db    'x86-code with yaos-abi.', 10
+  part.msgx86_linux       db    'x86-code with linux-abi.', 10
+  part.msgx86_windows     db    'x86-code with windows-abi.', 10
+  part.msgx86_64          db    'x86_64-code (standalone).', 10
+  part.msgx86_64_yaos     db    'x86_64-code with yaos-abi.', 10
+  part.msgx86_64_linux    db    'x86_64-code with linux-abi.', 10
+  part.msgx86_64_windows  db    'x86_64-code with windows-abi.', 10
+  part.msgResv            db    'unknown part with reserved  type!', 10
+  part.msgFake            db    'fake type!', 10
+  part.msgUnknown         db    'unknown part or not implemented yet. :-/', 10
+}

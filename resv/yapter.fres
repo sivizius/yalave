@@ -1,0 +1,33 @@
+;( yapter-table )
+;{
+;:  .table —+    .column —+
+;:          |     .....   |     .....         .....
+;:          |    _______  |    _______       _______
+;:          +——>| ..... |—+——>| .next |————>| ..... |——>.....
+;:              |       |     | .stop |——+  |       |
+;:              |       |     | .line |  |  |       |
+;:              |       | +——>| ..... |  |  |       |
+;:              |       | |   |       |  |  |       |
+;:              |       | |   |       |  |  |       |
+;:              |_______| |   |_______|  |  |_______|
+;:                .....   |     .....  <—+    .....
+;:            __yentry__ —+
+;:            ( .entry )
+;}
+
+yapter.file                             aq                                      1                                       ;*files
+yapter.libraries                        aq                                      1                                       ;*libraries
+
+;( used while processing an sba-file )
+;{
+  yapter.current                        aq                                      1                                       ;*pages+current, used while loading
+  onDebug
+  {
+    yapter.number                       aq                                      1                                       ;current offset in yapter, used in hexDump
+    yapter.hexLine                      ab                                      ( 64 - 16 )                             ;used to debug content
+  }
+  yapter.line                           ab                                      16                                      ;buffer for current chapter
+  yapter.length                         aw                                      1                                       ;init pages * page_size
+  yapter.symSize                        aw                                      1                                       ;summed size of symbols, used while building
+  yapter.symCount                       aw                                      1                                       ;number of symbols, used while building
+;}

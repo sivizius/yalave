@@ -1,0 +1,54 @@
+onDebug
+{
+  main.msgMySelf                        str                                     '[yalave] i am »'
+  main.msgOpen                          str                                     '[yalave] open file »'
+  main.msgOpenEnd                       str                                     '«.', 10
+  main.msgFailInputFile                 str                                     10, '[yalave] something is wrong with the input-file'
+  main.msgFailInternal                  str                                     10, '[yalave] an internal error occured! :-/'
+  main.msgHex                           str                                     '0x'
+
+
+
+
+
+
+  main.msgReadBuffer                    str                                     '[yalave] Read first 4 KiB.', 10
+  main.msgCheckSignature                str                                     '[yalave] Check Signature.', 10
+  main.msgSkipToChapters                str                                     '[yalave] Looking for Chapter-Table.', 10
+  main.msgChaptersFound                 str                                     '[yalave] Chapters found:', 10
+  main.msgChapterPosFile                str                                     '           > Addr@File:  0x'
+  main.msgChapterLenFile                str                                     '           > Size@File:  0x'
+                                        dw                                      ( @f - $ )
+  msgChapterFlags                       db                                      '           > Flags:      '
+  bufChapterFlagR                       db                                      0
+  bufChapterFlagW                       db                                      0
+  bufChapterFlagX                       db                                      0
+  bufChapterFlagS                       db                                      0
+                                        db                                      '-'
+  bufChapterFlagL                       db                                      0
+  bufChapterFlagA                       db                                      0
+  bufChapterFlagP                       db                                      0
+                                        db                                      '-'
+  bufChapterFlagSign                    db                                      0
+  bufChapterFlagPack                    db                                      0
+  bufChapterFlagEnc                     db                                      0
+  bufChapterFlagHash                    db                                      0
+  bufChapterFlagNewline                 db                                      10
+  @@:
+  msgChapterPosReal                     str                                     '           > Addr:       0x'
+  msgChapterLenReal                     str                                     '           > Size:       0x'
+  msgChapterLoad                        str                                     '           > Load Chapter...', 10
+  msgChapterRead                        str                                     '           > Read Chapter...', 10
+  msgChapterHex0                        str                                     '             > 0x'
+  msgChapterHex1                        str                                     ' : '
+  msgChapterHex2                        str                                     ' | '
+  msgChapterDone                        str                                     '           > done', 10
+  msgChapterTypes                       str                                     '           > Types:', 10
+  msgChapterPages                       str                                     '           > Pages:', 10
+  msgExecute                            str                                     '[yalave] == Execute ==', 10
+  msgFinal                              str                                     '[yalave] == Final ==', 10
+  errFile                               str                                     '[yalave] File not found!', 10
+  errTables                             str                                     '[yalave] Something is wrong with the tables!', 10
+  errSignature                          str                                     '[yalave] Signature ust start with »#!sba:«!'
+  errInputFile                          str                                     '[yalave] There is no Input-File!', 10
+}

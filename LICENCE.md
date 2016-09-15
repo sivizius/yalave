@@ -1,4 +1,4 @@
-yalave. version 0.9.1.0-»Amanita muscaria«.
+yalave - yet another loader and virtual environment. version 0.9.1.0-»Amanita muscaria«.
 
 Copyright (c) 2016, Sebastian Walz.
 

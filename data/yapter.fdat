@@ -1,0 +1,151 @@
+onDebug
+{
+  yapter.mVectors:
+    .x00:
+      .yFinal                           dq                                      yapter.myFinal
+      .yNote                            dq                                      yapter.myNote
+      .yData                            dq                                      yapter.myData
+      .yStack                           dq                                      yapter.myStack
+      .yConst                           dq                                      yapter.myConst
+      .yBuffers                         dq                                      yapter.myBuffers
+      .yRandom                          dq                                      yapter.myRandom
+      .yVariables                       dq                                      yapter.myUnknown
+    .x08:
+      .yInclude                         dq                                      yapter.myUnknown
+      .yTempSymbols                     dq                                      yapter.myUnknown
+      .yTempPointers                    dq                                      yapter.myUnknown
+      .ySymbols                         dq                                      yapter.mySymbols
+      .yPointers                        dq                                      yapter.myPointers
+      .yBuilder                         dq                                      yapter.myUnknown
+      .yCompile                         dq                                      yapter.myUnknown
+      .yParse                           dq                                      yapter.myUnknown
+    .x10:
+      .ySetup                           dq                                      yapter.myUnknown
+      .yModule                          dq                                      yapter.myModule
+      .y12                              dq                                      yapter.myUnknown
+      .yInternal                        dq                                      yapter.myUnknown
+      .yTypeInfo                        dq                                      yapter.myTypeInfo
+      .ySymbolInfo                      dq                                      yapter.mySymbolInfo
+      .y16                              dq                                      yapter.myUnknown
+      .y17                              dq                                      yapter.myUnknown
+    .x18:
+      .yFBBC_0                          dq                                      yapter.myFBBC_0
+      .yx86_16                          dq                                      yapter.myx86_16
+      .yx86_32                          dq                                      yapter.myx86_32
+      .yx86_64                          dq                                      yapter.myx86_64
+      .y1c                              dq                                      yapter.myUnknown
+      .y1d                              dq                                      yapter.myUnknown
+      .y1e                              dq                                      yapter.myUnknown
+      .yChapters                        dq                                      yapter.myUnknown
+  yapter.tVectors:
+    .x00:
+      .yFinal                           dq                                      yapter.typeFinal
+      .yNote                            dq                                      yapter.typeNote
+      .yData                            dq                                      yapter.typeData
+      .yStack                           dq                                      yapter.typeStack
+      .yConst                           dq                                      yapter.typeConst
+      .yBuffers                         dq                                      yapter.typeBuffers
+      .yRandom                          dq                                      yapter.typeRandom
+      .yVariables                       dq                                      yapter.myUnknown
+    .x08:
+      .yInclude                         dq                                      yapter.myUnknown
+      .yTempSymbols                     dq                                      yapter.myUnknown
+      .yTempPointers                    dq                                      yapter.myUnknown
+      .ySymbols                         dq                                      yapter.typeSymbols
+      .yPointers                        dq                                      yapter.typePointers
+      .yBuilder                         dq                                      yapter.myUnknown
+      .yCompile                         dq                                      yapter.myUnknown
+      .yParse                           dq                                      yapter.myUnknown
+    .x10:
+      .ySetup                           dq                                      yapter.myUnknown
+      .yModule                          dq                                      yapter.typeModule
+      .y12                              dq                                      yapter.myUnknown
+      .yInternal                        dq                                      yapter.myUnknown
+      .yTypeInfo                        dq                                      yapter.typeTypeInfo
+      .ySymbolInfo                      dq                                      yapter.typeSymbolInfo
+      .y16                              dq                                      yapter.myUnknown
+      .y17                              dq                                      yapter.myUnknown
+    .x18:
+      .yFBBC_0                          dq                                      yapter.typeFBBC_0
+      .yx86_16                          dq                                      yapter.typex86_16
+      .yx86_32                          dq                                      yapter.typex86_32
+      .yx86_64                          dq                                      yapter.typex86_64
+      .y1c                              dq                                      yapter.myUnknown
+      .y1d                              dq                                      yapter.myUnknown
+      .y1e                              dq                                      yapter.myUnknown
+      .yChapters                        dq                                      yapter.myUnknown
+}
+yapter.bVectors:
+  .x00:
+    .yFinal                             dq                                      yapter.bFinal
+    .yNote                              dq                                      yapter.bNote
+    .yData                              dq                                      yapter.bData
+    .yStack                             dq                                      yapter.failYapterUnknown
+    .yConst                             dq                                      yapter.bConst
+    .yBuffers                           dq                                      yapter.bBuffers
+    .yRandom                            dq                                      yapter.bRandom
+    .yVariables                         dq                                      yapter.failYapterUnknown
+  .x08:
+    .yInclude                           dq                                      yapter.failYapterUnknown
+    .yTempSymbols                       dq                                      yapter.failYapterUnknown
+    .yTempPointers                      dq                                      yapter.failYapterUnknown
+    .ySymbols                           dq                                      yapter.bSymbols
+    .yPointers                          dq                                      yapter.bPointers
+    .yBuilder                           dq                                      yapter.failYapterUnknown
+    .yCompile                           dq                                      yapter.failYapterUnknown
+    .yParse                             dq                                      yapter.failYapterUnknown
+  .x10:
+    .ySetup                             dq                                      yapter.failYapterUnknown
+    .yModule                            dq                                      yapter.bModule
+    .y12                                dq                                      yapter.failYapterUnknown
+    .yInternal                          dq                                      yapter.failYapterUnknown
+    .yTypeInfo                          dq                                      yapter.failYapterUnknown
+    .ySymbolInfo                        dq                                      yapter.failYapterUnknown
+    .y16                                dq                                      yapter.failYapterUnknown
+    .y17                                dq                                      yapter.failYapterUnknown
+  .x18:
+    .yFBBC_0                            dq                                      yapter.bCode
+    .yx86_16                            dq                                      yapter.bx86_16
+    .yx86_32                            dq                                      yapter.bx86_32
+    .yx86_64                            dq                                      yapter.bx86_64
+    .y1c                                dq                                      yapter.failYapterUnknown
+    .y1d                                dq                                      yapter.failYapterUnknown
+    .y1e                                dq                                      yapter.failYapterUnknown
+    .yChapters                          dq                                      yapter.failYapterUnknown
+yapter.lVectors:
+  .x00:
+    .yFinal                             dq                                      yapter.lFinal
+    .yNote                              dq                                      yapter.lNote
+    .yData                              dq                                      yapter.lData
+    .yStack                             dq                                      yapter.failYapterUnknown
+    .yConst                             dq                                      yapter.lConst
+    .yBuffers                           dq                                      yapter.lBuffers
+    .yRandom                            dq                                      yapter.lRandom
+    .yVariables                         dq                                      yapter.failYapterUnknown
+  .x08:
+    .yInclude                           dq                                      yapter.failYapterUnknown
+    .yTempSymbols                       dq                                      yapter.failYapterUnknown
+    .yTempPointers                      dq                                      yapter.failYapterUnknown
+    .ySymbols                           dq                                      yapter.lSymbols
+    .yPointers                          dq                                      yapter.lPointers
+    .yBuilder                           dq                                      yapter.failYapterUnknown
+    .yCompile                           dq                                      yapter.failYapterUnknown
+    .yParse                             dq                                      yapter.failYapterUnknown
+  .x10:
+    .ySetup                             dq                                      yapter.failYapterUnknown
+    .yModule                            dq                                      yapter.lModule
+    .y12                                dq                                      yapter.failYapterUnknown
+    .yInternal                          dq                                      yapter.failYapterUnknown
+    .yTypeInfo                          dq                                      yapter.failYapterUnknown
+    .ySymbolInfo                        dq                                      yapter.failYapterUnknown
+    .y16                                dq                                      yapter.failYapterUnknown
+    .y17                                dq                                      yapter.failYapterUnknown
+  .x18:
+    .yFBBC_0                            dq                                      yapter.lCode
+    .yx86_16                            dq                                      yapter.lCode
+    .yx86_32                            dq                                      yapter.lCode
+    .yx86_64                            dq                                      yapter.lCode
+    .y1c                                dq                                      yapter.failYapterUnknown
+    .y1d                                dq                                      yapter.failYapterUnknown
+    .y1e                                dq                                      yapter.failYapterUnknown
+    .yChapters                          dq                                      yapter.failYapterUnknown

@@ -1,3 +1,15 @@
 #!/bin/bash
 
-../build/bin/fasm "yalave.fasm" "../build/bin/yalave" 2>&1 | tee "../build/out/yalave.log"
+echo "#!sba:log"                                              >         "../build/out/yalave.log"
+echo '#a=_sivizius'                                           >>        "../build/out/yalave.log"
+echo '#b=ascii\\n'                                            >>        "../build/out/yalave.log"
+echo '#c=2016-03-25_07:40:04_UTC+0100'                        >>        "../build/out/yalave.log"
+echo -n '#d='                                                 >>        "../build/out/yalave.log"
+date "+%Y-%m-%d_%H:%M:%S"                                     >>        "../build/out/yalave.log"
+echo '#f=/sba/out/yalave.log'                                 >>        "../build/out/yalave.log"
+echo '#l=bash/en'                                             >>        "../build/out/yalave.log"
+echo '#p=/sba/doc/licenses/LICENCE.txt'                       >>        "../build/out/yalave.log"
+echo '#t=logfile for yalave'                                  >>        "../build/out/yalave.log"
+echo '#v=0.9.1.0-»Amanita muscaria«'                          >>        "../build/out/yalave.log"
+../build/bin/fasm "yalave.fasm" "../build/bin/yalave.elf"     | tee -a  "../build/out/yalave.log"
+chmod +x "../build/bin/yalave.elf"                            | tee -a  "../build/out/yalave.log"

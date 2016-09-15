@@ -1,0 +1,100 @@
+yalib_mods.buffers                      str                                     'buffers'
+yalib_mods.echo                         str                                     'echo'
+yalib_mods.environment                  str                                     'environment'
+yalib_mods.files                        str                                     'files'
+yalib_mods.threads                      str                                     'threads'
+yalib_mods.time                         str                                     'time'
+yalib_mods.buffers0                     str                                     'buffers', 0
+yalib_mods.echo0                        str                                     'echo', 0
+yalib_mods.environment0                 str                                     'environment', 0
+yalib_mods.files0                       str                                     'files', 0
+yalib_mods.threads0                     str                                     'threads', 0
+yalib_mods.time0                        str                                     'time', 0
+yalib_strings:
+;( buffers )
+;{
+  yalib_strings.buffers:
+  yalib.buffers.clone                   str                                     'clone'
+  yalib.buffers.create                  str                                     'create'
+  onDebug
+  {
+    yalib.buffers.debug                 str                                     'debug'
+  }
+  yalib.buffers.delete                  str                                     'delete'
+  yalib.buffers.echo                    str                                     'echo'
+  yalib.buffers.echo0                   str                                     'echo0'
+  yalib.buffers.extend                  str                                     'extend'
+  yalib.buffers.get                     str                                     'get'
+  yalib.buffers.is                      str                                     'is'
+  yalib.buffers.len                     str                                     'len'
+  yalib.buffers.length                  str                                     'length'
+  yalib.buffers.new                     str                                     'new'
+  yalib.buffers.putB                    str                                     'putB'
+  yalib.buffers.putByte                 str                                     'putByte'
+  yalib.buffers.putD                    str                                     'putD'
+  yalib.buffers.putDWord                str                                     'putDWord'
+  yalib.buffers.putQ                    str                                     'putQ'
+  yalib.buffers.putQWord                str                                     'putQWord'
+  yalib.buffers.putW                    str                                     'putW'
+  yalib.buffers.putWord                 str                                     'putWord'
+  yalib.buffers.rev                     str                                     'rev'
+  yalib.buffers.revive                  str                                     'revive'
+  yalib.buffers.store                   str                                     'store'
+  yalib.buffers.utf8                    str                                     'utf8'
+  yalib.buffers.wastepicker             str                                     'wastepicker'
+;}
+;( echo )
+;{
+  yalib_strings.echo:
+  yalib.echo.error                      str                                     'error'
+  yalib.echo.hexBuffer                  str                                     'hexBuffer'
+  yalib.echo.hexRegister                str                                     'hexRegister'
+  yalib.echo.hexValue                   str                                     'hexValue'
+  yalib.echo.print                      str                                     'print'
+  yalib.echo.state                      str                                     'state'
+;}
+;( environment )
+;{
+  yalib_strings.environment:
+  yalib.environment.get                 str                                     'get'
+  yalib.environment.init                str                                     'init'
+;}
+;( files )
+;{
+  yalib_strings.files:
+  yalib.files.close                     str                                     'close'
+  yalib.files.debug                     str                                     'debug'
+  yalib.files.get                       str                                     'get'
+  yalib.files.getB                      str                                     'getB'
+  yalib.files.getByte                   str                                     'getByte'
+  yalib.files.getC                      str                                     'getC'
+  yalib.files.getChar                   str                                     'getChar'
+  yalib.files.getD                      str                                     'getD'
+  yalib.files.getDWord                  str                                     'getDWord'
+  yalib.files.getL                      str                                     'getL'
+  yalib.files.getLength                 str                                     'getLength'
+  yalib.files.getO                      str                                     'getO'
+  yalib.files.getObject                 str                                     'getObject'
+  yalib.files.getQ                      str                                     'getQ'
+  yalib.files.getQWord                  str                                     'getQWord'
+  yalib.files.getS                      str                                     'getS'
+  yalib.files.getString                 str                                     'getString'
+  yalib.files.getTo                     str                                     'getTo'
+  yalib.files.getUTF8                   str                                     'getUTF8'
+  yalib.files.getW                      str                                     'getW'
+  yalib.files.getWord                   str                                     'getWord'
+  yalib.files.open                      str                                     'open'
+  yalib.files.seek                      str                                     'seek'
+  yalib.files.seekBack                  str                                     'seekBack'
+  yalib.files.seekBase                  str                                     'seekBase'
+;}
+;( threads )
+;{
+  yalib_strings.threads:
+  yalib.threads.call                    str                                     'call'
+;}
+;( time )
+;{
+  yalib_strings.time:
+  yalib.time.nanosleep                  str                                     'nanosleep'
+;}
