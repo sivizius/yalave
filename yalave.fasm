@@ -64,7 +64,7 @@ segment                                 executable
   code                                  'yapter'
 ;  code                                  'sba'
   times ( 0x1000 - ( $ and 0xfff ))     db                                      0x90
-segment                                 readable                                writeable
+segment                                 readable  writeable
   display                               'data: 0x'
   displayHex                            ( $ )
   display                               10
@@ -159,3 +159,5 @@ segment                                 readable                                
   display 'stop: 0x'
   displayHex ( $ )
   display 10
+
+segment                                 readable  writeable  gnustack

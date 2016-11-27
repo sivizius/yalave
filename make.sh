@@ -11,5 +11,5 @@ echo '#l=bash/en'                                             >>        "../buil
 echo '#p=/sba/doc/licenses/LICENCE.txt'                       >>        "../build/out/yalave.log"
 echo '#t=logfile for yalave'                                  >>        "../build/out/yalave.log"
 echo '#v=0.9.1.0-»Amanita muscaria«'                          >>        "../build/out/yalave.log"
-../build/bin/fasm "yalave.fasm" "../build/bin/yalave.elf"     | tee -a  "../build/out/yalave.log"
-chmod +x "../build/bin/yalave.elf"                            | tee -a  "../build/out/yalave.log"
+../build/bin/fasm "yalave.fasm" "../build/bin/yalave"         | tee -a  "../build/out/yalave.log"
+chmod +x "../build/bin/yalave"                                | tee -a  "../build/out/yalave.log"
